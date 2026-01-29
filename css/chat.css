@@ -12,6 +12,27 @@ Early 2000s Facebook/Web 2.0 style
     overflow: hidden;
 }
 
+/* Username Modal - fix visibility */
+.chat-page .username-modal {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.chat-page .username-modal.hidden {
+    display: none;
+}
+
+.chat-page .username-input {
+    font-size: 16px; /* Prevent iOS zoom */
+    padding: 12px;
+}
+
 .chat-page .chat-main {
     height: calc(100vh - 45px);
     height: calc(100dvh - 45px);
