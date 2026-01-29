@@ -5,10 +5,24 @@ Early 2000s Facebook/Web 2.0 style
 ==========================================
 */
 
+/* Mobile viewport fix */
+.chat-page {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+.chat-page .chat-main {
+    height: calc(100vh - 45px);
+    height: calc(100dvh - 45px);
+    overflow: hidden;
+}
+
 /* Chat Container */
 .chat-container {
     display: flex;
     height: calc(100vh - 45px);
+    height: calc(100dvh - 45px); /* Dynamic viewport height for mobile */
     max-width: 980px;
     margin: 0 auto;
     background: var(--color-white);
@@ -155,6 +169,15 @@ Early 2000s Facebook/Web 2.0 style
     height: 12px;
 }
 
+.garage-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 8px;
+}
+
 .online-count {
     display: flex;
     align-items: center;
@@ -168,6 +191,31 @@ Early 2000s Facebook/Web 2.0 style
     height: 6px;
     background: #5cb85c;
     border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.total-visitors {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--color-gray-text);
+}
+
+.total-visitors svg {
+    width: 12px;
+    height: 12px;
+    color: var(--color-blue);
+}
+
+.total-visitors span {
+    font-weight: bold;
+    color: var(--color-blue);
 }
 
 /* Mobile Sidebar Toggle */
@@ -492,6 +540,13 @@ Early 2000s Facebook/Web 2.0 style
 
 /* Responsive */
 @media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 45px);
+        height: calc(100dvh - 45px);
+        border: none;
+        flex-direction: column;
+    }
+
     .chat-sidebar {
         position: fixed;
         left: -210px;
@@ -507,13 +562,42 @@ Early 2000s Facebook/Web 2.0 style
 
     .sidebar-toggle {
         display: block;
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
     }
 
-    .chat-container {
-        border: none;
+    .chat-main-area {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .messages-container {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .message-input-container {
         padding: 8px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        background: var(--color-gray-light);
+        border-top: 1px solid var(--color-border);
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+    }
+
+    .message-form {
+        gap: 6px;
+    }
+
+    .message-input {
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        padding: 10px 50px 10px 10px;
+    }
+
+    .send-btn {
+        padding: 10px 12px;
     }
 }

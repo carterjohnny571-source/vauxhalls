@@ -2,8 +2,8 @@
 ==========================================
 THE VAUXHALLS - CHAT ROOM (THE GARAGE)
 ==========================================
-Anonymous real-time chat with Firebase
-Features: Multiple channels, rate limiting, moderation
+Real-time chat with Firebase
+Features: Multiple channels, presence detection, visitor tracking
 ==========================================
 */
 
@@ -27,7 +27,7 @@ Features: Multiple channels, rate limiting, moderation
 
         // LocalStorage keys
         STORAGE_USERNAME: 'vauxhalls_username',
-        STORAGE_MESSAGES: 'vauxhalls_messages_',
+        STORAGE_VISITOR_ID: 'vauxhalls_visitor_id',
 
         // Channel definitions
         CHANNELS: {
@@ -47,17 +47,41 @@ Features: Multiple channels, rate limiting, moderation
     };
 
     // ==========================================
+    // FIREBASE CONFIGURATION
+    // ==========================================
+
+    // IMPORTANT: Replace with your Firebase project credentials
+    // Get these from: https://console.firebase.google.com/
+    // Project Settings > General > Your apps > Firebase SDK snippet
+    const firebaseConfig = {
+        apiKey: "AIzaSyAdb-5ZAJlWjTX1Q2JKZeJaKfyiHSqJKQs",
+        authDomain: "vauxhalls.firebaseapp.com",
+        databaseURL: "https://vauxhalls-default-rtdb.firebaseio.com",
+        projectId: "vauxhalls",
+        storageBucket: "vauxhalls.firebasestorage.app",
+        messagingSenderId: "691217822844",
+        appId: "1:691217822844:web:fa91fae4fb7e41229805f9"
+    };
+
+    // ==========================================
     // STATE MANAGEMENT
     // ==========================================
 
     const state = {
         username: null,
+        visitorId: null,
         currentChannel: 'general',
         lastMessageTime: 0,
         isRateLimited: false,
-        onlineCount: 1,
-        messages: {}
+        onlineCount: 0,
+        totalVisitors: 0,
+        firebaseReady: false,
+        messageListeners: {}
     };
+
+    let database = null;
+    let presenceRef = null;
+    let connectedRef = null;
 
     // ==========================================
     // DOM ELEMENTS
@@ -83,6 +107,7 @@ Features: Multiple channels, rate limiting, moderation
         currentUserName: document.getElementById('currentUserName'),
         changeNameBtn: document.getElementById('changeNameBtn'),
         onlineCount: document.getElementById('onlineCount'),
+        totalVisitors: document.getElementById('totalVisitors'),
 
         // Chat header
         currentChannelName: document.getElementById('currentChannelName'),
@@ -108,36 +133,18 @@ Features: Multiple channels, rate limiting, moderation
     // FIREBASE INITIALIZATION
     // ==========================================
 
-    // Firebase configuration placeholder
-    // Replace with your own Firebase config
-    const firebaseConfig = {
-        // IMPORTANT: Replace these with your Firebase project credentials
-        // Get these from: https://console.firebase.google.com/
-        // Project Settings > General > Your apps > Firebase SDK snippet
-
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-
-    let firebaseInitialized = false;
-    let database = null;
-
     function initFirebase() {
         // Check if Firebase SDK is loaded
         if (typeof firebase === 'undefined') {
-            console.warn('Firebase SDK not loaded. Using localStorage fallback.');
+            console.error('Firebase SDK not loaded');
+            showToast('Chat service unavailable. Please refresh the page.', 'error');
             return false;
         }
 
         // Check if config is set
         if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
-            console.warn('Firebase not configured. Using localStorage fallback.');
-            console.log('To enable real-time chat, add your Firebase config in js/chat.js');
+            console.warn('Firebase not configured. Please add your Firebase config.');
+            showToast('Chat not configured. Contact site admin.', 'error');
             return false;
         }
 
@@ -147,42 +154,128 @@ Features: Multiple channels, rate limiting, moderation
                 firebase.initializeApp(firebaseConfig);
             }
             database = firebase.database();
-            firebaseInitialized = true;
+            state.firebaseReady = true;
             console.log('Firebase initialized successfully');
             return true;
         } catch (error) {
             console.error('Firebase initialization error:', error);
+            showToast('Failed to connect to chat service.', 'error');
             return false;
         }
     }
 
     // ==========================================
-    // LOCAL STORAGE FALLBACK
-    // For demo/development without Firebase
+    // VISITOR ID MANAGEMENT
     // ==========================================
 
-    function getLocalMessages(channel) {
-        const key = CONFIG.STORAGE_MESSAGES + channel;
-        const stored = localStorage.getItem(key);
-        return stored ? JSON.parse(stored) : [];
-    }
-
-    function saveLocalMessage(channel, message) {
-        const key = CONFIG.STORAGE_MESSAGES + channel;
-        const messages = getLocalMessages(channel);
-        messages.push(message);
-
-        // Keep only last N messages
-        if (messages.length > CONFIG.MAX_MESSAGES_DISPLAY) {
-            messages.splice(0, messages.length - CONFIG.MAX_MESSAGES_DISPLAY);
+    function getOrCreateVisitorId() {
+        let visitorId = localStorage.getItem(CONFIG.STORAGE_VISITOR_ID);
+        if (!visitorId) {
+            // Generate a unique visitor ID
+            visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem(CONFIG.STORAGE_VISITOR_ID, visitorId);
         }
-
-        localStorage.setItem(key, JSON.stringify(messages));
+        return visitorId;
     }
 
-    function clearLocalMessages(channel) {
-        const key = CONFIG.STORAGE_MESSAGES + channel;
-        localStorage.removeItem(key);
+    // ==========================================
+    // PRESENCE SYSTEM (Live User Count)
+    // ==========================================
+
+    function initPresence() {
+        if (!state.firebaseReady || !database) return;
+
+        state.visitorId = getOrCreateVisitorId();
+
+        // Reference to the presence list
+        presenceRef = database.ref('presence/' + state.visitorId);
+
+        // Reference to .info/connected which is true when connected
+        connectedRef = database.ref('.info/connected');
+
+        connectedRef.on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                // We're connected (or reconnected)
+
+                // Set our presence data
+                presenceRef.set({
+                    username: state.username || 'Anonymous',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                // Remove presence data when we disconnect
+                presenceRef.onDisconnect().remove();
+            }
+        });
+
+        // Listen to all presence changes to get online count
+        database.ref('presence').on('value', (snapshot) => {
+            const presenceData = snapshot.val();
+            const count = presenceData ? Object.keys(presenceData).length : 0;
+            state.onlineCount = count;
+            updateOnlineCount(count);
+        });
+    }
+
+    function updatePresenceUsername() {
+        if (presenceRef && state.username) {
+            presenceRef.update({
+                username: state.username,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+    }
+
+    function updateOnlineCount(count) {
+        if (elements.onlineCount) {
+            elements.onlineCount.textContent = count;
+        }
+    }
+
+    // ==========================================
+    // TOTAL VISITOR TRACKING
+    // ==========================================
+
+    function initVisitorTracking() {
+        if (!state.firebaseReady || !database) return;
+
+        const visitorId = getOrCreateVisitorId();
+        const visitorsRef = database.ref('visitors');
+        const thisVisitorRef = database.ref('visitors/' + visitorId);
+
+        // Check if this visitor has been counted before
+        thisVisitorRef.once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                // New visitor - add them and increment counter
+                thisVisitorRef.set({
+                    firstVisit: firebase.database.ServerValue.TIMESTAMP,
+                    lastVisit: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                // Increment total visitor count
+                database.ref('stats/totalVisitors').transaction((current) => {
+                    return (current || 0) + 1;
+                });
+            } else {
+                // Returning visitor - just update last visit
+                thisVisitorRef.update({
+                    lastVisit: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        });
+
+        // Listen to total visitor count changes
+        database.ref('stats/totalVisitors').on('value', (snapshot) => {
+            const total = snapshot.val() || 0;
+            state.totalVisitors = total;
+            updateTotalVisitors(total);
+        });
+    }
+
+    function updateTotalVisitors(count) {
+        if (elements.totalVisitors) {
+            elements.totalVisitors.textContent = count.toLocaleString();
+        }
     }
 
     // ==========================================
@@ -205,7 +298,7 @@ Features: Multiple channels, rate limiting, moderation
         const trimmed = username.trim();
 
         if (trimmed.length < CONFIG.MIN_USERNAME_LENGTH) {
-            return { valid: false, error: `Username must be at least ${CONFIG.MIN_USERNAME_LENGTH} characters` };
+            return { valid: false, error: `Username must be at least ${CONFIG.MIN_USERNAME_LENGTH} character` };
         }
 
         if (trimmed.length > CONFIG.MAX_USERNAME_LENGTH) {
@@ -225,6 +318,7 @@ Features: Multiple channels, rate limiting, moderation
         state.username = username;
         setStoredUsername(username);
         updateUserDisplay();
+        updatePresenceUsername();
     }
 
     function updateUserDisplay() {
@@ -275,7 +369,6 @@ Features: Multiple channels, rate limiting, moderation
         setUsername(validation.username);
         hideUsernameModal();
         loadMessages();
-        emitUserOnline();
         showToast(`Welcome to The Garage, ${validation.username}!`, 'success');
     }
 
@@ -285,6 +378,11 @@ Features: Multiple channels, rate limiting, moderation
 
     function switchChannel(channelId) {
         if (!CONFIG.CHANNELS[channelId]) return;
+
+        // Detach old listener
+        if (state.messageListeners[state.currentChannel]) {
+            database.ref(`messages/${state.currentChannel}`).off('child_added', state.messageListeners[state.currentChannel]);
+        }
 
         state.currentChannel = channelId;
 
@@ -317,8 +415,15 @@ Features: Multiple channels, rate limiting, moderation
     function createMessageElement(message, isOwnMessage = false) {
         const div = document.createElement('div');
         div.className = `message${isOwnMessage ? ' own-message' : ''}`;
-        if (message.type === 'announcement') {
-            div.classList.add('announcement');
+
+        if (message.type === 'system') {
+            div.classList.add('system-message');
+            div.innerHTML = `
+                <div class="message-content">
+                    <p class="message-text">${escapeHtml(message.text)}</p>
+                </div>
+            `;
+            return div;
         }
 
         const avatarInitial = message.username ? message.username.charAt(0).toUpperCase() : '?';
@@ -378,24 +483,42 @@ Features: Multiple channels, rate limiting, moderation
     }
 
     function loadMessages() {
-        if (firebaseInitialized && database) {
-            // Load from Firebase
-            const messagesRef = database.ref(`messages/${state.currentChannel}`);
-            messagesRef.orderByChild('timestamp').limitToLast(CONFIG.MESSAGES_PER_LOAD).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                addMessageToDisplay(message);
+        if (!state.firebaseReady || !database) {
+            console.warn('Firebase not ready, cannot load messages');
+            return;
+        }
+
+        const messagesRef = database.ref(`messages/${state.currentChannel}`);
+
+        // First, load existing messages
+        messagesRef.orderByChild('timestamp').limitToLast(CONFIG.MESSAGES_PER_LOAD).once('value', (snapshot) => {
+            const messages = [];
+            snapshot.forEach((child) => {
+                messages.push(child.val());
             });
-        } else {
-            // Load from localStorage
-            const messages = getLocalMessages(state.currentChannel);
+
+            // Sort by timestamp and display
+            messages.sort((a, b) => a.timestamp - b.timestamp);
             messages.forEach(message => {
                 addMessageToDisplay(message);
             });
-        }
+
+            // Then listen for new messages
+            const listener = messagesRef.orderByChild('timestamp').startAt(Date.now()).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                addMessageToDisplay(message);
+            });
+
+            state.messageListeners[state.currentChannel] = listener;
+        });
     }
 
     function sendMessage(text) {
         if (!text || !state.username) return false;
+        if (!state.firebaseReady || !database) {
+            showToast('Chat service not connected', 'error');
+            return false;
+        }
 
         // Rate limiting check
         const now = Date.now();
@@ -413,27 +536,13 @@ Features: Multiple channels, rate limiting, moderation
         const message = {
             username: state.username,
             text: trimmedText,
-            timestamp: now,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
             channel: state.currentChannel
         };
 
-        // Save message
-        if (firebaseInitialized && database) {
-            const messagesRef = database.ref(`messages/${state.currentChannel}`);
-            messagesRef.push(message);
-        } else if (socket) {
-            // Use socket.io for real-time broadcast
-            socket.emit('chat-message', {
-                message: trimmedText,
-                channel: state.currentChannel
-            });
-            // Also save locally
-            saveLocalMessage(state.currentChannel, message);
-        } else {
-            // localStorage fallback only
-            saveLocalMessage(state.currentChannel, message);
-            addMessageToDisplay(message);
-        }
+        // Push message to Firebase
+        const messagesRef = database.ref(`messages/${state.currentChannel}`);
+        messagesRef.push(message);
 
         state.lastMessageTime = now;
         return true;
@@ -631,13 +740,12 @@ Features: Multiple channels, rate limiting, moderation
             });
         }
 
-        // Clear local messages
+        // Clear local messages (now clears view only, not Firebase)
         if (elements.clearLocalBtn) {
             elements.clearLocalBtn.addEventListener('click', () => {
-                if (confirm('Clear all messages from this channel? (This only affects your local view)')) {
-                    clearLocalMessages(state.currentChannel);
+                if (confirm('Clear messages from your view? (Messages will reappear on refresh)')) {
                     clearMessagesDisplay();
-                    showToast('Local messages cleared', 'success');
+                    showToast('View cleared', 'success');
                 }
             });
         }
@@ -651,70 +759,22 @@ Features: Multiple channels, rate limiting, moderation
                 elements.chatSidebar.classList.remove('active');
             }
         });
-    }
 
-    // ==========================================
-    // SOCKET.IO CONNECTION
-    // ==========================================
-
-    let socket = null;
-
-    function initSocketIO() {
-        if (typeof io === 'undefined') {
-            console.warn('Socket.io not available');
-            return;
-        }
-
-        socket = io();
-
-        // Get real online count from server
-        socket.on('online-count', function(count) {
-            if (elements.onlineCount) {
-                elements.onlineCount.textContent = count;
-            }
-        });
-
-        // Real-time chat messages
-        socket.on('chat-message', function(data) {
-            if (data.channel === state.currentChannel) {
-                addMessageToDisplay({
-                    username: data.username,
-                    text: data.message,
-                    timestamp: new Date(data.timestamp).getTime()
+        // Handle page visibility for presence
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && presenceRef) {
+                presenceRef.update({
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
             }
         });
 
-        // User joined notification
-        socket.on('user-joined', function(data) {
-            addMessageToDisplay({
-                username: 'System',
-                text: data.username + ' joined The Garage',
-                timestamp: Date.now(),
-                type: 'system'
-            });
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (presenceRef) {
+                presenceRef.remove();
+            }
         });
-
-        // User left notification
-        socket.on('user-left', function(data) {
-            addMessageToDisplay({
-                username: 'System',
-                text: data.username + ' left The Garage',
-                timestamp: Date.now(),
-                type: 'system'
-            });
-        });
-    }
-
-    function emitUserOnline() {
-        // Check if user is registered via server system
-        const serverUser = JSON.parse(localStorage.getItem('vauxhalls_user') || 'null');
-        if (socket && serverUser) {
-            socket.emit('user-online', { odekicId: serverUser.odekicId, username: serverUser.username });
-        } else if (socket && state.username) {
-            // Fallback to local username
-            socket.emit('user-online', { odekicId: 'local_' + Date.now(), username: state.username });
-        }
     }
 
     // ==========================================
@@ -722,35 +782,32 @@ Features: Multiple channels, rate limiting, moderation
     // ==========================================
 
     function init() {
-        // Initialize Socket.io for real-time features
-        initSocketIO();
+        // Initialize Firebase first
+        const firebaseOk = initFirebase();
 
-        // Initialize Firebase (or fallback to localStorage)
-        initFirebase();
+        if (firebaseOk) {
+            // Initialize presence system
+            initPresence();
 
-        // Check for server-registered user first
-        const serverUser = JSON.parse(localStorage.getItem('vauxhalls_user') || 'null');
-        if (serverUser && serverUser.username) {
-            setUsername(serverUser.username);
-            hideUsernameModal();
-            loadMessages();
-            emitUserOnline();
-        } else {
-            // Fall back to old localStorage username
-            const storedUsername = getStoredUsername();
-            if (storedUsername) {
-                const validation = validateUsername(storedUsername);
-                if (validation.valid) {
-                    setUsername(validation.username);
-                    hideUsernameModal();
+            // Initialize visitor tracking
+            initVisitorTracking();
+        }
+
+        // Check for stored username
+        const storedUsername = getStoredUsername();
+        if (storedUsername) {
+            const validation = validateUsername(storedUsername);
+            if (validation.valid) {
+                setUsername(validation.username);
+                hideUsernameModal();
+                if (firebaseOk) {
                     loadMessages();
-                    emitUserOnline();
-                } else {
-                    showUsernameModal();
                 }
             } else {
                 showUsernameModal();
             }
+        } else {
+            showUsernameModal();
         }
 
         // Initialize event listeners
@@ -765,7 +822,7 @@ Features: Multiple channels, rate limiting, moderation
         }
 
         console.log('The Garage - Chat initialized');
-        console.log('Firebase:', firebaseInitialized ? 'Connected' : 'Using localStorage fallback');
+        console.log('Firebase:', state.firebaseReady ? 'Connected' : 'Not connected');
     }
 
     // Run when DOM is ready

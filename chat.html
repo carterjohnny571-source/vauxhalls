@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="The Garage - Anonymous chat room for The Vauxhalls community. Show announcements, fan discussions, and more.">
 
     <!-- Open Graph / Social Media -->
@@ -22,7 +22,10 @@
 
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/chat.css">
-    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="chat-page">
     <!--
@@ -161,9 +164,20 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="online-count">
-                        <span class="online-dot"></span>
-                        <span id="onlineCount">1</span> online
+                    <div class="garage-stats">
+                        <div class="online-count">
+                            <span class="online-dot"></span>
+                            <span id="onlineCount">0</span> in the garage
+                        </div>
+                        <div class="total-visitors">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <span id="totalVisitors">0</span> total visitors
+                        </div>
                     </div>
                 </div>
             </aside>
