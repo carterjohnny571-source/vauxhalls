@@ -514,7 +514,15 @@ Features: Multiple channels, presence detection, visitor tracking
     }
 
     function sendMessage(text) {
-        if (!text || !state.username) return false;
+        if (!text) {
+            showToast('Please enter a message', 'error');
+            return false;
+        }
+        if (!state.username) {
+            showToast('Please set a username first', 'error');
+            showUsernameModal();
+            return false;
+        }
         if (!state.firebaseReady || !database) {
             showToast('Chat service not connected', 'error');
             return false;
@@ -542,7 +550,14 @@ Features: Multiple channels, presence detection, visitor tracking
 
         // Push message to Firebase
         const messagesRef = database.ref(`messages/${state.currentChannel}`);
-        messagesRef.push(message);
+        messagesRef.push(message)
+            .then(() => {
+                console.log('Message sent successfully');
+            })
+            .catch((error) => {
+                console.error('Error sending message:', error);
+                showToast('Failed to send message: ' + error.message, 'error');
+            });
 
         state.lastMessageTime = now;
         return true;
@@ -793,8 +808,24 @@ Features: Multiple channels, presence detection, visitor tracking
             initVisitorTracking();
         }
 
-        // Check for stored username
-        const storedUsername = getStoredUsername();
+        // Check for stored username (also check old format for returning users)
+        let storedUsername = getStoredUsername();
+
+        // Check old localStorage format from previous version
+        if (!storedUsername) {
+            const oldUser = localStorage.getItem('vauxhalls_user');
+            if (oldUser) {
+                try {
+                    const parsed = JSON.parse(oldUser);
+                    if (parsed && parsed.username) {
+                        storedUsername = parsed.username;
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        }
+
         if (storedUsername) {
             const validation = validateUsername(storedUsername);
             if (validation.valid) {
