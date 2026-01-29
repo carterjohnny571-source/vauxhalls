@@ -370,7 +370,6 @@ Features: Multiple channels, presence detection, visitor tracking
         setUsername(validation.username);
         hideUsernameModal();
         loadMessages();
-        showToast(`Welcome to The Garage, ${validation.username}!`, 'success');
     }
 
     // ==========================================
