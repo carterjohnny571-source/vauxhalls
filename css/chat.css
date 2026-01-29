@@ -12,25 +12,94 @@ Early 2000s Facebook/Web 2.0 style
     overflow: hidden;
 }
 
-/* Username Modal - fix visibility */
+/* Username Modal - compact retro style */
 .chat-page .username-modal {
     display: flex;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    padding: 20px;
+    padding: 15px;
 }
 
 .chat-page .username-modal.hidden {
     display: none;
 }
 
+.chat-page .modal-content {
+    max-width: 280px;
+    padding: 15px;
+    background: var(--color-gray-light);
+    border: 2px solid var(--color-blue);
+    box-shadow: 3px 3px 0px var(--color-blue-dark);
+}
+
+.chat-page .modal-header {
+    margin-bottom: 12px;
+}
+
+.chat-page .modal-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.chat-page .modal-title {
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.chat-page .modal-subtitle {
+    font-size: 10px;
+    margin-top: 3px;
+}
+
+.chat-page .username-form {
+    gap: 8px;
+}
+
 .chat-page .username-input {
     font-size: 16px; /* Prevent iOS zoom */
-    padding: 12px;
+    padding: 8px;
+    font-size: 11px;
+}
+
+.chat-page .input-hint {
+    font-size: 9px;
+    color: var(--color-gray-dark);
+}
+
+.chat-page .btn-full {
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+.chat-page .btn-arrow {
+    width: 12px;
+    height: 12px;
+}
+
+/* Mobile modal adjustments */
+@media (max-width: 768px) {
+    .chat-page .modal-content {
+        max-width: 240px;
+        padding: 12px;
+    }
+
+    .chat-page .modal-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .chat-page .modal-title {
+        font-size: 12px;
+    }
+
+    .chat-page .username-input {
+        font-size: 16px; /* Keep 16px to prevent iOS zoom */
+        padding: 8px;
+    }
 }
 
 .chat-page .chat-main {
