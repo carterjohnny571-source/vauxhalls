@@ -324,6 +324,7 @@ Features: Multiple channels, presence detection, visitor tracking
     function updateUserDisplay() {
         if (elements.userAvatar) {
             elements.userAvatar.textContent = state.username ? state.username.charAt(0).toUpperCase() : '?';
+            elements.userAvatar.style.backgroundColor = getUserColor(state.username);
         }
         if (elements.currentUserName) {
             elements.currentUserName.textContent = state.username || 'Anonymous';
@@ -428,12 +429,13 @@ Features: Multiple channels, presence detection, visitor tracking
 
         const avatarInitial = message.username ? message.username.charAt(0).toUpperCase() : '?';
         const time = formatTime(message.timestamp);
+        const userColor = getUserColor(message.username);
 
         div.innerHTML = `
-            <div class="message-avatar">${escapeHtml(avatarInitial)}</div>
+            <div class="message-avatar" style="background-color: ${userColor}">${escapeHtml(avatarInitial)}</div>
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-username">${escapeHtml(message.username)}</span>
+                    <span class="message-username" style="color: ${userColor}">${escapeHtml(message.username)}</span>
                     <span class="message-time">${time}</span>
                 </div>
                 <p class="message-text">${escapeHtml(message.text)}</p>
@@ -691,6 +693,41 @@ Features: Multiple channels, presence detection, visitor tracking
     function formatTime(timestamp) {
         const date = new Date(timestamp);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Generate a consistent color for each username
+    function getUserColor(username) {
+        if (!username) return '#3b5998'; // Default blue
+
+        // Hash the username to get a consistent number
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+            hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // List of nice retro colors that work well with white text
+        const colors = [
+            '#3b5998', // Facebook blue
+            '#d9534f', // Red
+            '#5cb85c', // Green
+            '#f0ad4e', // Orange
+            '#5bc0de', // Light blue
+            '#9b59b6', // Purple
+            '#e74c3c', // Bright red
+            '#1abc9c', // Teal
+            '#e67e22', // Dark orange
+            '#2980b9', // Ocean blue
+            '#8e44ad', // Dark purple
+            '#27ae60', // Emerald
+            '#c0392b', // Dark red
+            '#16a085', // Dark teal
+            '#d35400', // Pumpkin
+            '#2c3e50'  // Dark blue-gray
+        ];
+
+        // Use absolute value of hash to pick a color
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
     }
 
     // ==========================================
