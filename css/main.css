@@ -259,6 +259,7 @@ a:hover {
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 8px;
     margin-bottom: 15px;
+    text-align: center;
 }
 
 .music-links {
@@ -533,7 +534,7 @@ a:hover {
 .margin-photos {
     position: fixed;
     top: 50px;
-    width: 120px;
+    width: 180px;
     display: flex;
     flex-direction: column;
     gap: 10px;
