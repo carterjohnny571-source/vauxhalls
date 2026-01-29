@@ -109,6 +109,110 @@
 
         <!--
         ==========================================
+        BAND LOGIN MODAL
+        For bands to log in and post announcements
+        ==========================================
+        -->
+        <div class="band-login-modal hidden" id="bandLoginModal">
+            <div class="modal-content">
+                <button class="modal-close-btn" id="closeBandModal" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+
+                <div class="modal-header">
+                    <div class="modal-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-3v13"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="15" r="3"/>
+                        </svg>
+                    </div>
+                    <h2 class="modal-title">Band Login</h2>
+                    <p class="modal-subtitle">Log in to post show announcements</p>
+                </div>
+
+                <!-- Tab Buttons -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Login</button>
+                    <button class="auth-tab" data-tab="register">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form class="auth-form" id="bandLoginForm">
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="loginUsername"
+                            class="auth-input"
+                            placeholder="Band name"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            class="auth-input"
+                            placeholder="Password"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <span>Login</span>
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </form>
+
+                <!-- Register Form (hidden by default) -->
+                <form class="auth-form hidden" id="bandRegisterForm">
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="registerUsername"
+                            class="auth-input"
+                            placeholder="Band name"
+                            maxlength="30"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                    <div class="input-group">
+                        <input
+                            type="email"
+                            id="registerEmail"
+                            class="auth-input"
+                            placeholder="Email address"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="registerPassword"
+                            class="auth-input"
+                            placeholder="Password (min 8 characters)"
+                            minlength="8"
+                            autocomplete="new-password"
+                            required
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <span>Register</span>
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <p class="input-hint">After registration, an admin will review your request</p>
+                </form>
+            </div>
+        </div>
+
+        <!--
+        ==========================================
         CHAT CONTAINER
         Main chat interface styled like car dashboard
         ==========================================
@@ -177,6 +281,20 @@
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                             </svg>
                             <span id="totalVisitors">0</span> total visitors
+                        </div>
+                    </div>
+
+                    <!-- Band Auth Status -->
+                    <div class="band-auth-section" id="bandAuthSection">
+                        <div class="band-auth-status" id="bandAuthStatus">
+                            <button class="band-login-btn" id="bandLoginBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18V5l12-3v13"/>
+                                    <circle cx="6" cy="18" r="3"/>
+                                    <circle cx="18" cy="15" r="3"/>
+                                </svg>
+                                <span>Band Login</span>
+                            </button>
                         </div>
                     </div>
                 </div>

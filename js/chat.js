@@ -28,6 +28,7 @@ Features: Multiple channels, presence detection, visitor tracking
         // LocalStorage keys
         STORAGE_USERNAME: 'vauxhalls_username',
         STORAGE_VISITOR_ID: 'vauxhalls_visitor_id',
+        STORAGE_BAND_TOKEN: 'vauxhalls_band_token',
 
         // Channel definitions
         CHANNELS: {
@@ -76,7 +77,12 @@ Features: Multiple channels, presence detection, visitor tracking
         onlineCount: 0,
         totalVisitors: 0,
         firebaseReady: false,
-        messageListeners: {}
+        messageListeners: {},
+        bandAuth: {
+            isLoggedIn: false,
+            token: null,
+            band: null
+        }
     };
 
     let database = null;
@@ -126,7 +132,22 @@ Features: Multiple channels, presence detection, visitor tracking
         rateLimitWarning: document.getElementById('rateLimitWarning'),
 
         // Toast
-        toastContainer: document.getElementById('toastContainer')
+        toastContainer: document.getElementById('toastContainer'),
+
+        // Band auth
+        bandLoginModal: document.getElementById('bandLoginModal'),
+        closeBandModal: document.getElementById('closeBandModal'),
+        bandLoginForm: document.getElementById('bandLoginForm'),
+        bandRegisterForm: document.getElementById('bandRegisterForm'),
+        authTabs: document.querySelectorAll('.auth-tab'),
+        loginUsername: document.getElementById('loginUsername'),
+        loginPassword: document.getElementById('loginPassword'),
+        registerUsername: document.getElementById('registerUsername'),
+        registerEmail: document.getElementById('registerEmail'),
+        registerPassword: document.getElementById('registerPassword'),
+        bandAuthSection: document.getElementById('bandAuthSection'),
+        bandAuthStatus: document.getElementById('bandAuthStatus'),
+        bandLoginBtn: document.getElementById('bandLoginBtn')
     };
 
     // ==========================================
@@ -402,6 +423,9 @@ Features: Multiple channels, presence detection, visitor tracking
         clearMessagesDisplay();
         loadMessages();
 
+        // Update input access for announcements channel
+        updateAnnouncementsAccess();
+
         // Close mobile sidebar
         if (elements.chatSidebar) {
             elements.chatSidebar.classList.remove('active');
@@ -428,13 +452,22 @@ Features: Multiple channels, presence detection, visitor tracking
 
         const avatarInitial = message.username ? message.username.charAt(0).toUpperCase() : '?';
         const time = formatTime(message.timestamp);
-        const userColor = getUserColor(message.username);
+        const isBand = message.isBand === true;
+
+        // Bands get gold color, others get generated color
+        const userColor = isBand ? '#FFD700' : getUserColor(message.username);
+        const avatarColor = isBand ? '#DAA520' : userColor;
+
+        // Add band class for additional styling
+        if (isBand) {
+            div.classList.add('band-message');
+        }
 
         div.innerHTML = `
-            <div class="message-avatar" style="background-color: ${userColor}">${escapeHtml(avatarInitial)}</div>
+            <div class="message-avatar" style="background-color: ${avatarColor}">${escapeHtml(avatarInitial)}</div>
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-username" style="color: ${userColor}">${escapeHtml(message.username)}</span>
+                    <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${escapeHtml(message.username)}${isBand ? ' <span class="band-badge">BAND</span>' : ''}</span>
                     <span class="message-time">${time}</span>
                 </div>
                 <p class="message-text">${escapeHtml(message.text)}</p>
@@ -529,6 +562,19 @@ Features: Multiple channels, presence detection, visitor tracking
             return false;
         }
 
+        // Check announcements channel access
+        if (state.currentChannel === 'announcements') {
+            if (!state.bandAuth.isLoggedIn) {
+                showToast('Please log in as a band to post announcements', 'error');
+                showBandLoginModal();
+                return false;
+            }
+            if (state.bandAuth.band?.status !== 'approved') {
+                showToast('Your band account is pending approval', 'error');
+                return false;
+            }
+        }
+
         // Rate limiting check
         const now = Date.now();
         if (now - state.lastMessageTime < CONFIG.MESSAGE_COOLDOWN) {
@@ -542,11 +588,16 @@ Features: Multiple channels, presence detection, visitor tracking
             return false;
         }
 
+        // Check if posting as a verified band
+        const isBand = state.bandAuth.isLoggedIn &&
+                      state.bandAuth.band?.status === 'approved';
+
         const message = {
             username: state.username,
             text: trimmedText,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
-            channel: state.currentChannel
+            channel: state.currentChannel,
+            isBand: isBand
         };
 
         // Push message to Firebase
@@ -677,6 +728,260 @@ Features: Multiple channels, presence detection, visitor tracking
         setTimeout(() => {
             toast.remove();
         }, 300);
+    }
+
+    // ==========================================
+    // BAND AUTHENTICATION
+    // ==========================================
+
+    function showBandLoginModal() {
+        if (elements.bandLoginModal) {
+            elements.bandLoginModal.classList.remove('hidden');
+            // Reset to login tab
+            switchAuthTab('login');
+        }
+    }
+
+    function hideBandLoginModal() {
+        if (elements.bandLoginModal) {
+            elements.bandLoginModal.classList.add('hidden');
+            // Clear forms
+            if (elements.bandLoginForm) elements.bandLoginForm.reset();
+            if (elements.bandRegisterForm) elements.bandRegisterForm.reset();
+        }
+    }
+
+    function switchAuthTab(tabName) {
+        elements.authTabs.forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        });
+
+        if (elements.bandLoginForm) {
+            elements.bandLoginForm.classList.toggle('hidden', tabName !== 'login');
+        }
+        if (elements.bandRegisterForm) {
+            elements.bandRegisterForm.classList.toggle('hidden', tabName !== 'register');
+        }
+    }
+
+    async function bandLogin(username, password) {
+        try {
+            const response = await fetch('/api/band/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setBandAuth(data.token, data.band);
+                return { success: true };
+            }
+
+            return { success: false, error: data.error };
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, error: 'Connection failed. Please try again.' };
+        }
+    }
+
+    async function bandRegister(username, email, password) {
+        try {
+            const response = await fetch('/api/band/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                return { success: true, message: data.message };
+            }
+
+            return { success: false, error: data.error };
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, error: 'Connection failed. Please try again.' };
+        }
+    }
+
+    async function verifyBandToken() {
+        const token = localStorage.getItem(CONFIG.STORAGE_BAND_TOKEN);
+        if (!token) return false;
+
+        try {
+            const response = await fetch('/api/band/verify', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setBandAuth(token, data.band, false);
+                return true;
+            }
+
+            // Token invalid, clear it
+            clearBandAuth();
+            return false;
+        } catch (error) {
+            console.error('Token verification error:', error);
+            return false;
+        }
+    }
+
+    function setBandAuth(token, band, saveToken = true) {
+        state.bandAuth = {
+            isLoggedIn: true,
+            token,
+            band
+        };
+
+        if (saveToken) {
+            localStorage.setItem(CONFIG.STORAGE_BAND_TOKEN, token);
+        }
+
+        updateBandAuthUI();
+        updateAnnouncementsAccess();
+    }
+
+    function clearBandAuth() {
+        state.bandAuth = {
+            isLoggedIn: false,
+            token: null,
+            band: null
+        };
+
+        localStorage.removeItem(CONFIG.STORAGE_BAND_TOKEN);
+        updateBandAuthUI();
+        updateAnnouncementsAccess();
+    }
+
+    function updateBandAuthUI() {
+        if (!elements.bandAuthStatus) return;
+
+        if (state.bandAuth.isLoggedIn && state.bandAuth.band) {
+            elements.bandAuthStatus.innerHTML = `
+                <div class="band-logged-in">
+                    <span class="band-name-display">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-3v13"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="15" r="3"/>
+                        </svg>
+                        ${escapeHtml(state.bandAuth.band.username)}
+                    </span>
+                    <button class="band-logout-btn" id="bandLogoutBtn">Logout</button>
+                </div>
+            `;
+            elements.bandAuthStatus.classList.add('logged-in');
+
+            // Rebind logout button
+            const logoutBtn = document.getElementById('bandLogoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    clearBandAuth();
+                    showToast('Logged out successfully', 'success');
+                });
+            }
+        } else {
+            elements.bandAuthStatus.innerHTML = `
+                <button class="band-login-btn" id="bandLoginBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-3v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="15" r="3"/>
+                    </svg>
+                    <span>Band Login</span>
+                </button>
+            `;
+            elements.bandAuthStatus.classList.remove('logged-in');
+
+            // Rebind login button
+            const loginBtn = document.getElementById('bandLoginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', showBandLoginModal);
+            }
+        }
+    }
+
+    function updateAnnouncementsAccess() {
+        const messageInput = elements.messageInput;
+        const sendBtn = elements.sendBtn;
+
+        if (!messageInput || !sendBtn) return;
+
+        if (state.currentChannel === 'announcements') {
+            const canPost = state.bandAuth.isLoggedIn &&
+                          state.bandAuth.band &&
+                          state.bandAuth.band.status === 'approved';
+
+            if (!canPost) {
+                messageInput.disabled = true;
+                messageInput.placeholder = 'Log in as a band to post announcements';
+                sendBtn.disabled = true;
+                messageInput.classList.add('disabled');
+            } else {
+                messageInput.disabled = false;
+                messageInput.placeholder = 'Type a show announcement...';
+                messageInput.classList.remove('disabled');
+                updateSendButton();
+            }
+        } else {
+            messageInput.disabled = false;
+            messageInput.placeholder = 'Type a message...';
+            messageInput.classList.remove('disabled');
+            updateSendButton();
+        }
+    }
+
+    async function handleBandLogin(e) {
+        e.preventDefault();
+
+        const username = elements.loginUsername?.value?.trim();
+        const password = elements.loginPassword?.value;
+
+        if (!username || !password) {
+            showToast('Please enter username and password', 'error');
+            return;
+        }
+
+        const result = await bandLogin(username, password);
+
+        if (result.success) {
+            hideBandLoginModal();
+            showToast('Logged in successfully!', 'success');
+        } else {
+            showToast(result.error || 'Login failed', 'error');
+        }
+    }
+
+    async function handleBandRegister(e) {
+        e.preventDefault();
+
+        const username = elements.registerUsername?.value?.trim();
+        const email = elements.registerEmail?.value?.trim();
+        const password = elements.registerPassword?.value;
+
+        if (!username || !email || !password) {
+            showToast('Please fill in all fields', 'error');
+            return;
+        }
+
+        if (password.length < 8) {
+            showToast('Password must be at least 8 characters', 'error');
+            return;
+        }
+
+        const result = await bandRegister(username, email, password);
+
+        if (result.success) {
+            hideBandLoginModal();
+            showToast(result.message || 'Registration submitted! Awaiting approval.', 'success');
+        } else {
+            showToast(result.error || 'Registration failed', 'error');
+        }
     }
 
     // ==========================================
@@ -829,13 +1134,49 @@ Features: Multiple channels, presence detection, visitor tracking
                 presenceRef.remove();
             }
         });
+
+        // Band login button
+        if (elements.bandLoginBtn) {
+            elements.bandLoginBtn.addEventListener('click', showBandLoginModal);
+        }
+
+        // Close band modal
+        if (elements.closeBandModal) {
+            elements.closeBandModal.addEventListener('click', hideBandLoginModal);
+        }
+
+        // Close modal on backdrop click
+        if (elements.bandLoginModal) {
+            elements.bandLoginModal.addEventListener('click', (e) => {
+                if (e.target === elements.bandLoginModal) {
+                    hideBandLoginModal();
+                }
+            });
+        }
+
+        // Auth tabs
+        elements.authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchAuthTab(tab.dataset.tab);
+            });
+        });
+
+        // Band login form
+        if (elements.bandLoginForm) {
+            elements.bandLoginForm.addEventListener('submit', handleBandLogin);
+        }
+
+        // Band register form
+        if (elements.bandRegisterForm) {
+            elements.bandRegisterForm.addEventListener('submit', handleBandRegister);
+        }
     }
 
     // ==========================================
     // INITIALIZATION
     // ==========================================
 
-    function init() {
+    async function init() {
         // Initialize Firebase first
         const firebaseOk = initFirebase();
 
@@ -846,6 +1187,9 @@ Features: Multiple channels, presence detection, visitor tracking
             // Initialize visitor tracking
             initVisitorTracking();
         }
+
+        // Check for saved band token
+        await verifyBandToken();
 
         // Check for stored username (also check old format for returning users)
         let storedUsername = getStoredUsername();

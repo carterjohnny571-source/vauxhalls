@@ -628,6 +628,248 @@ Early 2000s Facebook/Web 2.0 style
     border-left: 3px solid #5cb85c;
 }
 
+/* ==========================================
+   BAND LOGIN MODAL & AUTH STYLES
+   ========================================== */
+
+/* Band Login Modal */
+.band-login-modal {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 15px;
+}
+
+.band-login-modal.hidden {
+    display: none;
+}
+
+.band-login-modal .modal-content {
+    max-width: 320px;
+    width: 100%;
+    padding: 20px;
+    background: var(--color-gray-light);
+    border: 2px solid var(--color-blue);
+    box-shadow: 3px 3px 0px var(--color-blue-dark);
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-gray-dark);
+    padding: 5px;
+}
+
+.modal-close-btn:hover {
+    color: var(--color-blue);
+}
+
+.modal-close-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Auth Tabs */
+.auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px 15px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    font-family: var(--font-main);
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--color-gray-text);
+    cursor: pointer;
+    margin-bottom: -1px;
+}
+
+.auth-tab:first-child {
+    border-radius: 3px 0 0 0;
+}
+
+.auth-tab:last-child {
+    border-radius: 0 3px 0 0;
+    border-left: none;
+}
+
+.auth-tab.active {
+    background: var(--color-gray-light);
+    color: var(--color-blue);
+    border-bottom: 1px solid var(--color-gray-light);
+}
+
+.auth-tab:hover:not(.active) {
+    background: #f5f5f5;
+}
+
+/* Auth Forms */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-form.hidden {
+    display: none;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 10px;
+    font-family: var(--font-main);
+    font-size: 11px;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-medium);
+    border-radius: 3px;
+    color: #333;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--color-blue);
+}
+
+.auth-form .input-hint {
+    font-size: 9px;
+    color: var(--color-gray-dark);
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* Band Auth Section in Sidebar */
+.band-auth-section {
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid var(--color-border);
+}
+
+.band-auth-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.band-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 12px;
+    background: linear-gradient(to bottom, #5890ff 0%, #3b5998 100%);
+    border: 1px solid #2d4373;
+    border-radius: 3px;
+    color: white;
+    font-family: var(--font-main);
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.band-login-btn:hover {
+    background: linear-gradient(to bottom, #6a9fff 0%, #4a6aa8 100%);
+}
+
+.band-login-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Band Logged In State */
+.band-logged-in {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.band-name-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #5cb85c;
+}
+
+.band-name-display svg {
+    width: 12px;
+    height: 12px;
+}
+
+.band-logout-btn {
+    padding: 5px 10px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-gray-text);
+    font-family: var(--font-main);
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.band-logout-btn:hover {
+    background: var(--color-gray-light);
+    color: #d9534f;
+    border-color: #d9534f;
+}
+
+/* Disabled Message Input (for announcements when not logged in) */
+.message-input.disabled {
+    background: #f5f5f5;
+    color: var(--color-gray-dark);
+    cursor: not-allowed;
+}
+
+.message-input.disabled::placeholder {
+    color: var(--color-gray-dark);
+    font-style: italic;
+}
+
+/* Band Message Styling - Gold Theme */
+.message.band-message {
+    border-left: 3px solid #FFD700;
+    background: linear-gradient(to right, rgba(255, 215, 0, 0.08), var(--color-gray-light));
+}
+
+.message.band-message:hover {
+    background: linear-gradient(to right, rgba(255, 215, 0, 0.12), #f0f0f0);
+}
+
+.message-username.band-username {
+    color: #DAA520 !important;
+    text-shadow: 0 0 1px rgba(218, 165, 32, 0.3);
+}
+
+.band-badge {
+    display: inline-block;
+    padding: 1px 4px;
+    margin-left: 5px;
+    background: linear-gradient(to bottom, #FFD700, #DAA520);
+    color: #1a1a2e;
+    font-size: 8px;
+    font-weight: bold;
+    border-radius: 2px;
+    vertical-align: middle;
+    text-shadow: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .chat-container {
@@ -689,5 +931,21 @@ Early 2000s Facebook/Web 2.0 style
 
     .send-btn {
         padding: 10px 12px;
+    }
+
+    /* Mobile band login modal */
+    .band-login-modal .modal-content {
+        max-width: 280px;
+        padding: 15px;
+    }
+
+    .auth-input {
+        font-size: 16px; /* Prevent iOS zoom */
+        padding: 10px;
+    }
+
+    .auth-tab {
+        font-size: 10px;
+        padding: 8px 10px;
     }
 }
