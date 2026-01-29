@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="chrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8e8e8"/>
+      <stop offset="50%" style="stop-color:#a8a8a8"/>
+      <stop offset="100%" style="stop-color:#c8c8c8"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="4" fill="#0a0a0a"/>
+  <text x="16" y="23" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold" fill="url(#chrome)" text-anchor="middle">V</text>
+</svg>

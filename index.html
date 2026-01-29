@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Vauxhalls - Official website. Listen on Spotify, Apple Music, and join The Garage.">
+
+    <title>The Vauxhalls</title>
+
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tahoma&family=Verdana&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/main.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <header class="nav-header" id="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-text">The Vauxhalls</span>
+            </a>
+
+            <nav class="nav-menu" id="navMenu">
+                <a href="#music" class="nav-link">Music</a>
+                <a href="chat.html" class="nav-link nav-garage">The Garage</a>
+            </nav>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="toggle-bar"></span>
+                <span class="toggle-bar"></span>
+                <span class="toggle-bar"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Left margin photos -->
+    <div class="margin-photos margin-left">
+        <img src="vauxhalls photos/vx1.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx3.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx5.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx7.png" alt="The Vauxhalls">
+    </div>
+
+    <!-- Right margin photos -->
+    <div class="margin-photos margin-right">
+        <img src="vauxhalls photos/vx2.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx4.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx6.png" alt="The Vauxhalls">
+        <img src="vauxhalls photos/vx8.png" alt="The Vauxhalls">
+    </div>
+
+    <main>
+        <!-- Music Links Section -->
+        <section class="music-section" id="music">
+            <div class="section-container">
+                <h2 class="section-title">Listen Now</h2>
+
+                <div class="music-links">
+                    <a href="https://open.spotify.com/artist/2dg5NW2EXyujvQfqXokBTd" target="_blank" rel="noopener" class="music-link-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        <span>Spotify</span>
+                    </a>
+
+                    <a href="https://music.apple.com/ca/artist/the-vauxhalls" target="_blank" rel="noopener" class="music-link-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.802.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03c.525 0 1.048-.034 1.57-.1.823-.106 1.597-.35 2.296-.81.84-.553 1.472-1.287 1.88-2.208.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.042-1.8-.636-1.97-1.569-.142-.803.2-1.645.97-2.033.357-.18.747-.264 1.143-.323.398-.06.8-.1 1.188-.208.252-.07.426-.216.46-.494.008-.063.013-.128.013-.192v-3.933a.49.49 0 00-.387-.48c-.063-.013-.13-.016-.194-.018l-4.453-.638c-.147-.02-.293-.035-.44-.035-.284 0-.478.17-.523.45-.018.117-.023.236-.023.355v6.792c0 .41-.05.816-.217 1.194-.27.608-.73.99-1.37 1.18-.343.1-.694.163-1.05.186-.99.064-1.88-.6-2.08-1.517-.175-.798.15-1.66.88-2.072.345-.195.727-.29 1.115-.36.37-.064.745-.108 1.112-.19.274-.06.457-.213.502-.49.013-.082.016-.166.016-.25V6.97a.69.69 0 01.563-.692l6.346-1.218c.126-.024.253-.044.38-.046.33-.007.53.19.554.52.004.057.003.113.003.17z"/></svg>
+                        <span>Apple Music</span>
+                    </a>
+
+                    <a href="https://www.instagram.com/thevauxhalls/?hl=en" target="_blank" rel="noopener" class="music-link-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        <span>Instagram</span>
+                    </a>
+                </div>
+
+                <!-- Spotify Embed Player -->
+                <div class="spotify-embed">
+                    <iframe
+                        style="border-radius:12px"
+                        src="https://open.spotify.com/embed/artist/2dg5NW2EXyujvQfqXokBTd?utm_source=generator&theme=0"
+                        width="100%"
+                        height="352"
+                        frameBorder="0"
+                        allowfullscreen=""
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy">
+                    </iframe>
+                </div>
+
+                <div class="garage-link">
+                    <a href="chat.html" class="btn btn-primary btn-large">
+                        <span>Enter The Garage</span>
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-stats">
+                <span class="stat-item">
+                    <span class="online-dot"></span>
+                    <span id="onlineCount">0</span> online now
+                </span>
+                <span class="stat-item">
+                    <span id="totalVisits">0</span> total visits
+                </span>
+                <span class="stat-item">
+                    <span id="totalUsers">0</span> registered users
+                </span>
+            </div>
+            <div class="footer-bottom">
+                <p class="copyright">&copy; 2024 The Vauxhalls. All rights reserved.</p>
+                <p class="user-greeting" id="userGreeting"></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Username Registration Modal -->
+    <div class="username-modal" id="registerModal">
+        <div class="register-box">
+            <h3>Welcome to The Vauxhalls!</h3>
+            <p>Choose a username (first come first serve!)</p>
+            <form id="registerForm">
+                <input type="text" id="registerUsername" placeholder="Enter username..." maxlength="20" required>
+                <span class="username-status" id="usernameStatus"></span>
+                <button type="submit" class="btn btn-primary">Claim Username</button>
+            </form>
+            <p class="register-note">This username is permanent and cannot be changed.</p>
+        </div>
+    </div>
+
+    <!-- Annoying Video Popup Ad -->
+    <div class="popup-ad" id="popupAd">
+        <div class="popup-header" id="popupHeader">
+            <span class="popup-title">FREE MUSIC VIDEO!!! (drag me)</span>
+            <button class="popup-close" id="popupClose">X</button>
+        </div>
+        <div class="popup-content">
+            <iframe
+                width="100%"
+                height="200"
+                src="https://www.youtube.com/embed/dkoMagfxMro?autoplay=1&mute=1&loop=1&playlist=dkoMagfxMro"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <div class="popup-footer">
+            <marquee>CLICK HERE TO WATCH - THE VAUXHALLS - DRUGGY - NEW MUSIC VIDEO</marquee>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Socket.io connection
+        const socket = io();
+
+        // User data stored in localStorage
+        let currentUser = JSON.parse(localStorage.getItem('vauxhalls_user')) || null;
+
+        // DOM elements
+        const registerModal = document.getElementById('registerModal');
+        const registerForm = document.getElementById('registerForm');
+        const registerUsername = document.getElementById('registerUsername');
+        const usernameStatus = document.getElementById('usernameStatus');
+        const userGreeting = document.getElementById('userGreeting');
+        const onlineCountEl = document.getElementById('onlineCount');
+        const totalVisitsEl = document.getElementById('totalVisits');
+        const totalUsersEl = document.getElementById('totalUsers');
+
+        // Check if user is registered
+        if (currentUser) {
+            // Verify user still exists
+            fetch('/api/user/' + currentUser.odekicId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.username) {
+                        registerModal.style.display = 'none';
+                        userGreeting.textContent = 'Logged in as: ' + data.username;
+                        socket.emit('user-online', { odekicId: currentUser.odekicId, username: data.username });
+                    } else {
+                        localStorage.removeItem('vauxhalls_user');
+                        registerModal.style.display = 'flex';
+                    }
+                })
+                .catch(() => {
+                    registerModal.style.display = 'flex';
+                });
+        } else {
+            registerModal.style.display = 'flex';
+        }
+
+        // Check username availability as user types
+        let checkTimeout;
+        registerUsername.addEventListener('input', function() {
+            clearTimeout(checkTimeout);
+            const username = this.value.trim();
+            if (username.length < 1) {
+                usernameStatus.textContent = '';
+                return;
+            }
+            usernameStatus.textContent = 'Checking...';
+            usernameStatus.className = 'username-status checking';
+
+            checkTimeout = setTimeout(() => {
+                fetch('/api/check-username/' + encodeURIComponent(username))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.available) {
+                            usernameStatus.textContent = '✓ Available!';
+                            usernameStatus.className = 'username-status available';
+                        } else {
+                            usernameStatus.textContent = '✗ Taken';
+                            usernameStatus.className = 'username-status taken';
+                        }
+                    });
+            }, 300);
+        });
+
+        // Register form submit
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = registerUsername.value.trim();
+            if (!username) return;
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    usernameStatus.textContent = '✗ ' + data.error;
+                    usernameStatus.className = 'username-status taken';
+                } else {
+                    localStorage.setItem('vauxhalls_user', JSON.stringify(data));
+                    currentUser = data;
+                    registerModal.style.display = 'none';
+                    userGreeting.textContent = 'Logged in as: ' + data.username;
+                    socket.emit('user-online', { odekicId: data.odekicId, username: data.username });
+                }
+            });
+        });
+
+        // Socket events
+        socket.on('online-count', function(count) {
+            onlineCountEl.textContent = count;
+        });
+
+        // Fetch stats
+        fetch('/api/stats')
+            .then(r => r.json())
+            .then(data => {
+                totalVisitsEl.textContent = data.totalVisits;
+                totalUsersEl.textContent = data.totalUsers;
+                onlineCountEl.textContent = data.onlineCount;
+            });
+
+        // =====================
+        // ANNOYING POPUP AD
+        // =====================
+        const popup = document.getElementById('popupAd');
+        const closeBtn = document.getElementById('popupClose');
+        const header = document.getElementById('popupHeader');
+        let closeAttempts = 0;
+
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeAttempts++;
+
+            if (closeAttempts >= 5) {
+                popup.style.display = 'none';
+            } else {
+                const maxX = window.innerWidth - popup.offsetWidth - 20;
+                const maxY = window.innerHeight - popup.offsetHeight - 20;
+                const newX = Math.max(20, Math.floor(Math.random() * maxX));
+                const newY = Math.max(20, Math.floor(Math.random() * maxY));
+
+                popup.style.left = newX + 'px';
+                popup.style.top = newY + 'px';
+                popup.style.right = 'auto';
+                popup.style.bottom = 'auto';
+            }
+        });
+
+        // Draggable popup
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        header.addEventListener('mousedown', function(e) {
+            if (e.target === closeBtn) return;
+            isDragging = true;
+            dragOffsetX = e.clientX - popup.offsetLeft;
+            dragOffsetY = e.clientY - popup.offsetTop;
+            popup.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            let newX = e.clientX - dragOffsetX;
+            let newY = e.clientY - dragOffsetY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - popup.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - popup.offsetHeight));
+            popup.style.left = newX + 'px';
+            popup.style.top = newY + 'px';
+            popup.style.right = 'auto';
+            popup.style.bottom = 'auto';
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            popup.style.cursor = 'default';
+        });
+
+        setTimeout(function() {
+            popup.style.display = 'block';
+        }, 2000);
+    </script>
+</body>
+</html>

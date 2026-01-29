@@ -1,0 +1,794 @@
+/*
+==========================================
+THE VAUXHALLS - EARLY 2000s WEB STYLE
+==========================================
+Clean, simple, Facebook/Web 2.0 inspired
+==========================================
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Tahoma&family=Verdana&display=swap');
+
+:root {
+    /* Early 2000s Web Colors */
+    --color-blue: #3b5998;
+    --color-blue-dark: #2d4373;
+    --color-blue-light: #8b9dc3;
+
+    --color-white: #ffffff;
+    --color-gray-light: #f7f7f7;
+    --color-gray: #e9e9e9;
+    --color-gray-medium: #cccccc;
+    --color-gray-dark: #999999;
+    --color-gray-text: #666666;
+
+    --color-border: #d8dfea;
+    --color-link: #3b5998;
+    --color-link-hover: #2d4373;
+
+    --color-green: #3c763d;
+    --color-green-bg: #355e3b;
+
+    /* Fonts */
+    --font-main: Tahoma, Verdana, Arial, sans-serif;
+}
+
+/* Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Body */
+body {
+    font-family: var(--font-main);
+    font-size: 11px;
+    background: var(--color-gray-light);
+    color: #333;
+    line-height: 1.4;
+}
+
+a {
+    color: var(--color-link);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================
+   NAVIGATION - Facebook style header
+   ========================================== */
+.nav-header {
+    background: linear-gradient(to bottom, #5974a8 0%, #3b5998 100%);
+    border-bottom: 1px solid #2d4373;
+    padding: 5px 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo {
+    text-decoration: none;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--color-white);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    letter-spacing: -0.5px;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2px;
+}
+
+.nav-link {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--color-white);
+    text-decoration: none;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.nav-link:hover, .nav-link.active {
+    background: rgba(255,255,255,0.2);
+    text-decoration: none;
+}
+
+.nav-garage {
+    background: #5890ff;
+}
+
+/* Mobile nav toggle */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.toggle-bar {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: white;
+    margin: 3px 0;
+}
+
+.nav-social {
+    display: none;
+}
+
+/* ==========================================
+   HERO SECTION - Simple banner
+   ========================================== */
+.hero {
+    background: var(--color-green-bg);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-top: 50px;
+    border-bottom: 3px solid #2d4a2d;
+}
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-media {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    min-width: 177.77vh;
+    min-height: 56.25vw;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        transparent 0%,
+        rgba(53, 94, 59, 0.7) 100%
+    );
+}
+
+.hero-content {
+    text-align: center;
+    z-index: 1;
+    padding: 20px;
+}
+
+.hero-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.title-line {
+    font-size: 48px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    line-height: 1.1;
+}
+
+.title-accent {
+    color: #90EE90;
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+    position: absolute;
+    bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 1;
+}
+
+.scroll-text {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+}
+
+.scroll-line {
+    width: 1px;
+    height: 20px;
+    background: rgba(255,255,255,0.5);
+}
+
+/* ==========================================
+   MUSIC SECTION - Clean white box
+   ========================================== */
+.music-section {
+    padding: 20px;
+    background: var(--color-white);
+    max-width: 980px;
+    margin: 20px auto;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+}
+
+.section-container {
+    max-width: 100%;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--color-blue);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.music-links {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--color-gray-light);
+    border: 1px solid var(--color-gray);
+    border-radius: 3px;
+}
+
+.music-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: linear-gradient(to bottom, #f7f7f7 0%, #e3e3e3 100%);
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    color: #333;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.music-link-btn:hover {
+    background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+    text-decoration: none;
+}
+
+.music-link-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.music-link-btn span {
+    font-size: 11px;
+}
+
+/* Spotify embed */
+.spotify-embed {
+    max-width: 100%;
+    margin: 0 0 20px;
+    border: 1px solid var(--color-border);
+    padding: 10px;
+    background: var(--color-gray-light);
+    border-radius: 3px;
+}
+
+/* Garage link button */
+.garage-link {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-main);
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(to bottom, #5890ff 0%, #3b5998 100%);
+    color: white;
+    border: 1px solid #2d4373;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to bottom, #6a9fff 0%, #4a6aa8 100%);
+    text-decoration: none;
+}
+
+.btn-large {
+    font-size: 13px;
+    padding: 10px 20px;
+}
+
+.btn-arrow {
+    width: 12px;
+    height: 12px;
+}
+
+/* ==========================================
+   FOOTER - Simple gray bar
+   ========================================== */
+.footer {
+    background: var(--color-gray);
+    border-top: 1px solid var(--color-gray-medium);
+    padding: 15px 20px;
+    text-align: center;
+}
+
+.footer-container {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.footer-bottom {
+    font-size: 11px;
+    color: var(--color-gray-text);
+}
+
+.copyright {
+    margin: 0;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--color-blue);
+        flex-direction: column;
+        padding: 10px;
+        border-top: 1px solid var(--color-blue-dark);
+    }
+
+    .nav-menu.active {
+        display: flex;
+    }
+
+    .nav-link {
+        display: block;
+        text-align: center;
+    }
+
+    .title-line {
+        font-size: 32px;
+    }
+
+    .music-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .music-link-btn {
+        justify-content: center;
+    }
+}
+
+/* ==========================================
+   CHAT PAGE STYLES
+   ========================================== */
+.chat-page {
+    background: var(--color-gray-light);
+}
+
+.chat-main {
+    padding-top: 45px;
+    min-height: 100vh;
+}
+
+/* Username Modal */
+.username-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.username-modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-medium);
+    border-radius: 3px;
+    padding: 20px;
+    max-width: 350px;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--color-blue);
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--color-blue);
+    margin-top: 10px;
+}
+
+.modal-subtitle {
+    font-size: 11px;
+    color: var(--color-gray-text);
+    margin-top: 5px;
+}
+
+.username-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-group {
+    position: relative;
+}
+
+.username-input {
+    width: 100%;
+    padding: 8px;
+    font-family: var(--font-main);
+    font-size: 11px;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-medium);
+    border-radius: 3px;
+    color: #333;
+}
+
+.username-input:focus {
+    outline: none;
+    border-color: var(--color-blue);
+}
+
+.input-counter {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--color-gray-dark);
+}
+
+.input-hint {
+    font-size: 10px;
+    color: var(--color-gray-text);
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ==========================================
+   MARGIN PHOTOS - Photos on left and right
+   ========================================== */
+.margin-photos {
+    position: fixed;
+    top: 50px;
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    z-index: 10;
+}
+
+.margin-left {
+    left: 0;
+}
+
+.margin-right {
+    right: 0;
+}
+
+.margin-photos img {
+    width: 100%;
+    height: auto;
+    border: 2px solid var(--color-border);
+    background: white;
+    padding: 3px;
+}
+
+.margin-photos img:hover {
+    border-color: var(--color-blue);
+}
+
+/* Adjust main content to account for margins */
+.music-section {
+    margin-left: 140px;
+    margin-right: 140px;
+    margin-top: 60px;
+}
+
+/* ==========================================
+   ANNOYING POPUP AD - 2000s style
+   ========================================== */
+.popup-ad {
+    display: none;
+    position: fixed;
+    right: 50px;
+    bottom: 50px;
+    width: 340px;
+    background: #ffffcc;
+    border: 3px solid #ff6600;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+}
+
+.popup-header {
+    background: linear-gradient(to bottom, #ff9900 0%, #ff6600 100%);
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #cc5500;
+    cursor: grab;
+    user-select: none;
+}
+
+.popup-header:active {
+    cursor: grabbing;
+}
+
+.popup-title {
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px #993300;
+}
+
+.popup-close {
+    background: #cc0000;
+    color: white;
+    border: 2px outset #ff3333;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+.popup-close:hover {
+    background: #ff0000;
+}
+
+.popup-content {
+    padding: 0;
+    background: black;
+}
+
+.popup-content iframe,
+.popup-content video {
+    width: 100%;
+    height: 200px;
+    display: block;
+    object-fit: cover;
+}
+
+.popup-footer {
+    background: #ffff99;
+    padding: 5px;
+    border-top: 2px solid #ffcc00;
+    font-size: 10px;
+    color: #cc0000;
+    font-weight: bold;
+}
+
+.popup-footer marquee {
+    color: #cc0000;
+}
+
+/* ==========================================
+   RESPONSIVE - Hide margin photos on mobile
+   ========================================== */
+@media (max-width: 1100px) {
+    .margin-photos {
+        display: none;
+    }
+
+    .music-section {
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-top: 60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .popup-ad {
+        width: 280px;
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .popup-content iframe,
+    .popup-content video {
+        height: 160px;
+    }
+}
+
+/* ==========================================
+   USERNAME REGISTRATION MODAL
+   ========================================== */
+.username-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.register-box {
+    background: white;
+    border: 3px solid var(--color-blue);
+    padding: 25px;
+    max-width: 350px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+}
+
+.register-box h3 {
+    color: var(--color-blue);
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.register-box p {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.register-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.register-box input {
+    padding: 10px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    font-family: var(--font-main);
+}
+
+.register-box input:focus {
+    outline: none;
+    border-color: var(--color-blue);
+}
+
+.username-status {
+    font-size: 11px;
+    text-align: left;
+}
+
+.username-status.checking {
+    color: #999;
+}
+
+.username-status.available {
+    color: green;
+}
+
+.username-status.taken {
+    color: red;
+}
+
+.register-note {
+    font-size: 10px;
+    color: #999;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* ==========================================
+   FOOTER STATS
+   ========================================== */
+.footer-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #666;
+    background: white;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: #5cb85c;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.user-greeting {
+    font-size: 10px;
+    color: var(--color-blue);
+    margin-top: 5px;
+}
