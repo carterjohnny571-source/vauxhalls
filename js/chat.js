@@ -766,7 +766,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
     async function bandLogin(username, password) {
         try {
-            const response = await fetch('/api/band/login', {
+            const response = await fetch('/.netlify/functions/band-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -788,7 +788,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
     async function bandRegister(username, email, password) {
         try {
-            const response = await fetch('/api/band/register', {
+            const response = await fetch('/.netlify/functions/band-register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -812,7 +812,7 @@ Features: Multiple channels, presence detection, visitor tracking
         if (!token) return false;
 
         try {
-            const response = await fetch('/api/band/verify', {
+            const response = await fetch('/.netlify/functions/band-verify', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
