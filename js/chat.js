@@ -698,10 +698,13 @@ Features: Multiple channels, presence detection, visitor tracking
     function getUserColor(username) {
         if (!username) return '#3b5998'; // Default blue
 
-        // Hash the username to get a consistent number
+        // Better hash function for more color variety
         let hash = 0;
-        for (let i = 0; i < username.length; i++) {
-            hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        const str = username.toLowerCase();
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
         }
 
         // List of nice retro colors that work well with white text
@@ -709,23 +712,23 @@ Features: Multiple channels, presence detection, visitor tracking
             '#3b5998', // Facebook blue
             '#d9534f', // Red
             '#5cb85c', // Green
-            '#f0ad4e', // Orange
+            '#e67e22', // Orange
             '#5bc0de', // Light blue
             '#9b59b6', // Purple
             '#e74c3c', // Bright red
             '#1abc9c', // Teal
-            '#e67e22', // Dark orange
             '#2980b9', // Ocean blue
             '#8e44ad', // Dark purple
             '#27ae60', // Emerald
             '#c0392b', // Dark red
             '#16a085', // Dark teal
             '#d35400', // Pumpkin
-            '#2c3e50'  // Dark blue-gray
+            '#34495e', // Dark gray
+            '#e91e63'  // Pink
         ];
 
         // Use absolute value of hash to pick a color
-        const index = Math.abs(hash) % colors.length;
+        const index = Math.abs(hash % colors.length);
         return colors[index];
     }
 
