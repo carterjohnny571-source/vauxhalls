@@ -512,11 +512,14 @@ Features: Multiple channels, presence detection, visitor tracking
         // Build badge HTML with custom color
         const badgeStyle = isBand ? `style="background: linear-gradient(to bottom, ${bandColor}, ${adjustColor(bandColor, -40)})"` : '';
 
+        // Non-verified users get quotation marks around their name
+        const displayName = isBand ? escapeHtml(message.username) : `"${escapeHtml(message.username)}"`;
+
         div.innerHTML = `
             ${avatarHtml}
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${escapeHtml(message.username)}${isBand ? ` <span class="band-badge" ${badgeStyle}>${escapeHtml(bandTitle)}</span>` : ''}</span>
+                    <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${displayName}${isBand ? ` <span class="band-badge" ${badgeStyle}>${escapeHtml(bandTitle)}</span>` : ''}</span>
                     <span class="message-time">${time}</span>
                 </div>
                 ${messageContent}
