@@ -16,7 +16,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
     const CONFIG = {
         // Backend API URL (Render.com)
-        API_URL: 'https://vauxhalls-api.onrender.com',
+        API_URL: 'https://vauxhalls-info.onrender.com',
 
         // Rate limiting
         MESSAGE_COOLDOWN: 2000, // 2 seconds between messages
