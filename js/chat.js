@@ -33,6 +33,10 @@ Features: Multiple channels, presence detection, visitor tracking
         STORAGE_VISITOR_ID: 'vauxhalls_visitor_id',
         STORAGE_BAND_TOKEN: 'vauxhalls_band_token',
 
+        // Cloudinary config (for band image uploads)
+        CLOUDINARY_CLOUD_NAME: 'dcapiwyx1',
+        CLOUDINARY_UPLOAD_PRESET: 'vauxhalls_flyers',
+
         // Channel definitions
         CHANNELS: {
             general: {
@@ -136,6 +140,10 @@ Features: Multiple channels, presence detection, visitor tracking
 
         // Toast
         toastContainer: document.getElementById('toastContainer'),
+
+        // Image upload
+        uploadBtn: document.getElementById('uploadBtn'),
+        imageInput: document.getElementById('imageInput'),
 
         // Band auth
         bandLoginModal: document.getElementById('bandLoginModal'),
@@ -466,6 +474,15 @@ Features: Multiple channels, presence detection, visitor tracking
             div.classList.add('band-message');
         }
 
+        // Build message content
+        let messageContent = '';
+        if (message.text) {
+            messageContent += `<p class="message-text">${escapeHtml(message.text)}</p>`;
+        }
+        if (message.imageUrl) {
+            messageContent += `<div class="message-image"><img src="${escapeHtml(message.imageUrl)}" alt="Shared image" loading="lazy" onclick="window.open('${escapeHtml(message.imageUrl)}', '_blank')"></div>`;
+        }
+
         div.innerHTML = `
             <div class="message-avatar" style="background-color: ${avatarColor}">${escapeHtml(avatarInitial)}</div>
             <div class="message-content">
@@ -473,7 +490,7 @@ Features: Multiple channels, presence detection, visitor tracking
                     <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${escapeHtml(message.username)}${isBand ? ' <span class="band-badge">BAND</span>' : ''}</span>
                     <span class="message-time">${time}</span>
                 </div>
-                <p class="message-text">${escapeHtml(message.text)}</p>
+                ${messageContent}
             </div>
         `;
 
@@ -847,6 +864,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
         updateBandAuthUI();
         updateAnnouncementsAccess();
+        updateUploadButtonVisibility();
     }
 
     function clearBandAuth() {
@@ -859,6 +877,7 @@ Features: Multiple channels, presence detection, visitor tracking
         localStorage.removeItem(CONFIG.STORAGE_BAND_TOKEN);
         updateBandAuthUI();
         updateAnnouncementsAccess();
+        updateUploadButtonVisibility();
     }
 
     function updateBandAuthUI() {
@@ -985,6 +1004,99 @@ Features: Multiple channels, presence detection, visitor tracking
         } else {
             showToast(result.error || 'Registration failed', 'error');
         }
+    }
+
+    // ==========================================
+    // IMAGE UPLOAD (Cloudinary)
+    // ==========================================
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+
+        try {
+            showToast('Uploading image...', 'info');
+
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const data = await response.json();
+            return data.secure_url;
+        } catch (error) {
+            console.error('Image upload error:', error);
+            showToast('Failed to upload image', 'error');
+            return null;
+        }
+    }
+
+    async function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image too large. Max 5MB.', 'error');
+            return;
+        }
+
+        // Check if user is a logged-in band
+        if (!state.bandAuth.isLoggedIn || state.bandAuth.band?.status !== 'approved') {
+            showToast('Only approved bands can upload images', 'error');
+            return;
+        }
+
+        const imageUrl = await uploadImage(file);
+        if (imageUrl) {
+            sendImageMessage(imageUrl);
+        }
+
+        // Clear the input
+        e.target.value = '';
+    }
+
+    function sendImageMessage(imageUrl) {
+        if (!state.firebaseReady || !database) {
+            showToast('Chat service not connected', 'error');
+            return;
+        }
+
+        const message = {
+            username: state.username,
+            text: '',
+            imageUrl: imageUrl,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            channel: state.currentChannel,
+            isBand: true
+        };
+
+        const messagesRef = database.ref(`messages/${state.currentChannel}`);
+        messagesRef.push(message)
+            .then(() => {
+                showToast('Image posted!', 'success');
+            })
+            .catch((error) => {
+                console.error('Error sending image:', error);
+                showToast('Failed to post image', 'error');
+            });
+    }
+
+    function updateUploadButtonVisibility() {
+        if (!elements.uploadBtn) return;
+
+        const canUpload = state.bandAuth.isLoggedIn &&
+                         state.bandAuth.band?.status === 'approved';
+
+        elements.uploadBtn.classList.toggle('hidden', !canUpload);
     }
 
     // ==========================================
@@ -1172,6 +1284,18 @@ Features: Multiple channels, presence detection, visitor tracking
         // Band register form
         if (elements.bandRegisterForm) {
             elements.bandRegisterForm.addEventListener('submit', handleBandRegister);
+        }
+
+        // Image upload button
+        if (elements.uploadBtn) {
+            elements.uploadBtn.addEventListener('click', () => {
+                elements.imageInput?.click();
+            });
+        }
+
+        // Image input change
+        if (elements.imageInput) {
+            elements.imageInput.addEventListener('change', handleImageUpload);
         }
     }
 
