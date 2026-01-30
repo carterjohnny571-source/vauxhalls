@@ -15,6 +15,9 @@ Features: Multiple channels, presence detection, visitor tracking
     // ==========================================
 
     const CONFIG = {
+        // Backend API URL (Render.com)
+        API_URL: 'https://vauxhalls-api.onrender.com',
+
         // Rate limiting
         MESSAGE_COOLDOWN: 2000, // 2 seconds between messages
         MAX_MESSAGE_LENGTH: 500,
@@ -766,7 +769,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
     async function bandLogin(username, password) {
         try {
-            const response = await fetch('/.netlify/functions/band-login', {
+            const response = await fetch(`${CONFIG.API_URL}/api/band/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -788,7 +791,7 @@ Features: Multiple channels, presence detection, visitor tracking
 
     async function bandRegister(username, email, password) {
         try {
-            const response = await fetch('/.netlify/functions/band-register', {
+            const response = await fetch(`${CONFIG.API_URL}/api/band/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -812,7 +815,7 @@ Features: Multiple channels, presence detection, visitor tracking
         if (!token) return false;
 
         try {
-            const response = await fetch('/.netlify/functions/band-verify', {
+            const response = await fetch(`${CONFIG.API_URL}/api/band/verify`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

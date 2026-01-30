@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'users.json');
 const BANDS_FILE = path.join(__dirname, 'bands.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_this';
@@ -137,6 +137,17 @@ function authenticateBand(req, res, next) {
 
 // Track online users
 let onlineUsers = new Map(); // odekic id -> username
+
+// CORS - Allow frontend to call backend from different domain
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // Serve static files
 app.use(express.static(__dirname));
