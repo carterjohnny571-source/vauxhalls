@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const app = express();
 const server = http.createServer(app);
@@ -48,31 +48,23 @@ function writeBandsDB(data) {
     fs.writeFileSync(BANDS_FILE, JSON.stringify(data, null, 2));
 }
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+// Resend email configuration
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verify email transporter on startup
-transporter.verify(function(error, success) {
-    if (error) {
-        console.error('Email transporter error:', error.message);
-    } else {
-        console.log('Email server is ready to send messages');
-    }
-});
+// Verify Resend on startup
+if (process.env.RESEND_API_KEY) {
+    console.log('Email service (Resend) is configured');
+} else {
+    console.log('Warning: RESEND_API_KEY not set - emails will not be sent');
+}
 
 // Send approval email to admin
 async function sendApprovalEmail(band) {
     const approvalLink = `${process.env.SERVER_URL || 'http://localhost:3000'}/api/band/approve/${band.approvalToken}`;
 
-    const mailOptions = {
-        from: `"The Vauxhalls Website" <${process.env.SMTP_USER}>`,
-        to: process.env.ADMIN_EMAIL,
+    const { data, error } = await resend.emails.send({
+        from: 'The Vauxhalls <onboarding@resend.dev>',
+        to: [process.env.ADMIN_EMAIL],
         subject: `[Band Registration] ${band.username} requests approval`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -106,9 +98,12 @@ async function sendApprovalEmail(band) {
                 </p>
             </div>
         `
-    };
+    });
 
-    return transporter.sendMail(mailOptions);
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data;
 }
 
 // JWT authentication middleware
