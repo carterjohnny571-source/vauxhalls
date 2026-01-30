@@ -158,7 +158,21 @@ Features: Multiple channels, presence detection, visitor tracking
         registerPassword: document.getElementById('registerPassword'),
         bandAuthSection: document.getElementById('bandAuthSection'),
         bandAuthStatus: document.getElementById('bandAuthStatus'),
-        bandLoginBtn: document.getElementById('bandLoginBtn')
+        bandLoginBtn: document.getElementById('bandLoginBtn'),
+
+        // Band profile
+        bandProfileModal: document.getElementById('bandProfileModal'),
+        closeProfileModal: document.getElementById('closeProfileModal'),
+        bandProfileForm: document.getElementById('bandProfileForm'),
+        profileTitle: document.getElementById('profileTitle'),
+        profileColor: document.getElementById('profileColor'),
+        colorValue: document.getElementById('colorValue'),
+        pfpInput: document.getElementById('pfpInput'),
+        pfpUploadBtn: document.getElementById('pfpUploadBtn'),
+        pfpStatus: document.getElementById('pfpStatus'),
+        previewAvatar: document.getElementById('previewAvatar'),
+        previewName: document.getElementById('previewName'),
+        previewBadge: document.getElementById('previewBadge')
     };
 
     // ==========================================
@@ -465,13 +479,17 @@ Features: Multiple channels, presence detection, visitor tracking
         const time = formatTime(message.timestamp);
         const isBand = message.isBand === true;
 
-        // Bands get gold color, others get generated color
-        const userColor = isBand ? '#FFD700' : getUserColor(message.username);
-        const avatarColor = isBand ? '#DAA520' : userColor;
+        // Bands use custom colors, others get generated color
+        const bandColor = message.bandColor || '#FFD700';
+        const userColor = isBand ? bandColor : getUserColor(message.username);
+        const avatarColor = isBand ? adjustColor(bandColor, -30) : userColor;
+        const bandTitle = message.bandTitle || 'BAND';
+        const bandPfp = message.bandPfp || null;
 
         // Add band class for additional styling
         if (isBand) {
             div.classList.add('band-message');
+            div.style.borderLeftColor = bandColor;
         }
 
         // Build message content
@@ -483,11 +501,22 @@ Features: Multiple channels, presence detection, visitor tracking
             messageContent += `<div class="message-image"><img src="${escapeHtml(message.imageUrl)}" alt="Shared image" loading="lazy" onclick="window.open('${escapeHtml(message.imageUrl)}', '_blank')"></div>`;
         }
 
+        // Build avatar HTML
+        let avatarHtml;
+        if (bandPfp) {
+            avatarHtml = `<div class="message-avatar" style="background-image: url('${escapeHtml(bandPfp)}'); background-size: cover; background-color: ${avatarColor};"></div>`;
+        } else {
+            avatarHtml = `<div class="message-avatar" style="background-color: ${avatarColor}">${escapeHtml(avatarInitial)}</div>`;
+        }
+
+        // Build badge HTML with custom color
+        const badgeStyle = isBand ? `style="background: linear-gradient(to bottom, ${bandColor}, ${adjustColor(bandColor, -40)})"` : '';
+
         div.innerHTML = `
-            <div class="message-avatar" style="background-color: ${avatarColor}">${escapeHtml(avatarInitial)}</div>
+            ${avatarHtml}
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${escapeHtml(message.username)}${isBand ? ' <span class="band-badge">BAND</span>' : ''}</span>
+                    <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${escapeHtml(message.username)}${isBand ? ` <span class="band-badge" ${badgeStyle}>${escapeHtml(bandTitle)}</span>` : ''}</span>
                     <span class="message-time">${time}</span>
                 </div>
                 ${messageContent}
@@ -619,6 +648,13 @@ Features: Multiple channels, presence detection, visitor tracking
             channel: state.currentChannel,
             isBand: isBand
         };
+
+        // Add band profile data if logged in as band
+        if (isBand && state.bandAuth.band) {
+            message.bandColor = state.bandAuth.band.color || '#FFD700';
+            message.bandTitle = state.bandAuth.band.title || 'BAND';
+            message.bandPfp = state.bandAuth.band.profilePic || null;
+        }
 
         // Push message to Firebase
         const messagesRef = database.ref(`messages/${state.currentChannel}`);
@@ -884,20 +920,36 @@ Features: Multiple channels, presence detection, visitor tracking
         if (!elements.bandAuthStatus) return;
 
         if (state.bandAuth.isLoggedIn && state.bandAuth.band) {
+            const band = state.bandAuth.band;
+            const color = band.color || '#FFD700';
             elements.bandAuthStatus.innerHTML = `
                 <div class="band-logged-in">
-                    <span class="band-name-display">
+                    <span class="band-name-display" style="color: ${color}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 18V5l12-3v13"/>
                             <circle cx="6" cy="18" r="3"/>
                             <circle cx="18" cy="15" r="3"/>
                         </svg>
-                        ${escapeHtml(state.bandAuth.band.username)}
+                        ${escapeHtml(band.username)}
                     </span>
-                    <button class="band-logout-btn" id="bandLogoutBtn">Logout</button>
+                    <div class="band-btn-row">
+                        <button class="band-profile-btn" id="bandProfileBtn" title="Edit Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="band-logout-btn" id="bandLogoutBtn">Logout</button>
+                    </div>
                 </div>
             `;
             elements.bandAuthStatus.classList.add('logged-in');
+
+            // Rebind profile button
+            const profileBtn = document.getElementById('bandProfileBtn');
+            if (profileBtn) {
+                profileBtn.addEventListener('click', showBandProfileModal);
+            }
 
             // Rebind logout button
             const logoutBtn = document.getElementById('bandLogoutBtn');
@@ -1007,6 +1059,138 @@ Features: Multiple channels, presence detection, visitor tracking
     }
 
     // ==========================================
+    // BAND PROFILE CUSTOMIZATION
+    // ==========================================
+
+    function showBandProfileModal() {
+        if (!elements.bandProfileModal) return;
+        elements.bandProfileModal.classList.remove('hidden');
+
+        // Load current profile settings
+        const profile = state.bandAuth.band || {};
+        if (elements.profileTitle) {
+            elements.profileTitle.value = profile.title || 'BAND';
+        }
+        if (elements.profileColor) {
+            elements.profileColor.value = profile.color || '#FFD700';
+            updateColorValue();
+        }
+        if (elements.pfpStatus) {
+            elements.pfpStatus.textContent = profile.profilePic ? 'Image set' : 'No image';
+        }
+        updateProfilePreview();
+    }
+
+    function hideBandProfileModal() {
+        if (elements.bandProfileModal) {
+            elements.bandProfileModal.classList.add('hidden');
+        }
+    }
+
+    function updateColorValue() {
+        if (elements.colorValue && elements.profileColor) {
+            elements.colorValue.textContent = elements.profileColor.value.toUpperCase();
+        }
+    }
+
+    function updateProfilePreview() {
+        const profile = state.bandAuth.band || {};
+        const color = elements.profileColor?.value || profile.color || '#FFD700';
+        const title = elements.profileTitle?.value || profile.title || 'BAND';
+        const name = profile.username || 'Band Name';
+
+        if (elements.previewAvatar) {
+            if (profile.profilePic) {
+                elements.previewAvatar.style.backgroundImage = `url(${profile.profilePic})`;
+                elements.previewAvatar.style.backgroundSize = 'cover';
+                elements.previewAvatar.textContent = '';
+            } else {
+                elements.previewAvatar.style.backgroundImage = '';
+                elements.previewAvatar.textContent = name.charAt(0).toUpperCase();
+            }
+            elements.previewAvatar.style.backgroundColor = color;
+        }
+        if (elements.previewName) {
+            elements.previewName.textContent = name;
+            elements.previewName.style.color = color;
+        }
+        if (elements.previewBadge) {
+            elements.previewBadge.textContent = title;
+            elements.previewBadge.style.background = `linear-gradient(to bottom, ${color}, ${adjustColor(color, -30)})`;
+        }
+    }
+
+    function adjustColor(hex, amount) {
+        // Darken or lighten a hex color
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        r = Math.max(0, Math.min(255, r + amount));
+        g = Math.max(0, Math.min(255, g + amount));
+        b = Math.max(0, Math.min(255, b + amount));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    async function handlePfpUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('Image too large. Max 2MB.', 'error');
+            return;
+        }
+
+        const imageUrl = await uploadImage(file);
+        if (imageUrl) {
+            state.bandAuth.band.profilePic = imageUrl;
+            if (elements.pfpStatus) {
+                elements.pfpStatus.textContent = 'Image uploaded!';
+            }
+            updateProfilePreview();
+        }
+        e.target.value = '';
+    }
+
+    async function handleBandProfileSave(e) {
+        e.preventDefault();
+
+        const title = elements.profileTitle?.value?.trim() || 'BAND';
+        const color = elements.profileColor?.value || '#FFD700';
+
+        // Update local state
+        state.bandAuth.band.title = title;
+        state.bandAuth.band.color = color;
+
+        // Save to server
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/api/band/profile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.bandAuth.token}`
+                },
+                body: JSON.stringify({
+                    title,
+                    color,
+                    profilePic: state.bandAuth.band.profilePic
+                })
+            });
+
+            if (response.ok) {
+                showToast('Profile saved!', 'success');
+                hideBandProfileModal();
+                updateBandAuthUI();
+            } else {
+                const data = await response.json();
+                showToast(data.error || 'Failed to save profile', 'error');
+            }
+        } catch (error) {
+            console.error('Profile save error:', error);
+            showToast('Failed to save profile', 'error');
+        }
+    }
+
+    // ==========================================
     // IMAGE UPLOAD (Cloudinary)
     // ==========================================
 
@@ -1070,13 +1254,17 @@ Features: Multiple channels, presence detection, visitor tracking
             return;
         }
 
+        const band = state.bandAuth.band;
         const message = {
             username: state.username,
             text: '',
             imageUrl: imageUrl,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             channel: state.currentChannel,
-            isBand: true
+            isBand: true,
+            bandColor: band?.color || '#FFD700',
+            bandTitle: band?.title || 'BAND',
+            bandPfp: band?.profilePic || null
         };
 
         const messagesRef = database.ref(`messages/${state.currentChannel}`);
@@ -1296,6 +1484,44 @@ Features: Multiple channels, presence detection, visitor tracking
         // Image input change
         if (elements.imageInput) {
             elements.imageInput.addEventListener('change', handleImageUpload);
+        }
+
+        // Band profile modal
+        if (elements.closeProfileModal) {
+            elements.closeProfileModal.addEventListener('click', hideBandProfileModal);
+        }
+
+        if (elements.bandProfileModal) {
+            elements.bandProfileModal.addEventListener('click', (e) => {
+                if (e.target === elements.bandProfileModal) {
+                    hideBandProfileModal();
+                }
+            });
+        }
+
+        if (elements.bandProfileForm) {
+            elements.bandProfileForm.addEventListener('submit', handleBandProfileSave);
+        }
+
+        if (elements.profileColor) {
+            elements.profileColor.addEventListener('input', () => {
+                updateColorValue();
+                updateProfilePreview();
+            });
+        }
+
+        if (elements.profileTitle) {
+            elements.profileTitle.addEventListener('input', updateProfilePreview);
+        }
+
+        if (elements.pfpUploadBtn) {
+            elements.pfpUploadBtn.addEventListener('click', () => {
+                elements.pfpInput?.click();
+            });
+        }
+
+        if (elements.pfpInput) {
+            elements.pfpInput.addEventListener('change', handlePfpUpload);
         }
     }
 

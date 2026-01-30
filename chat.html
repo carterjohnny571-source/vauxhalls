@@ -213,6 +213,74 @@
 
         <!--
         ==========================================
+        BAND PROFILE MODAL
+        Customize color, title, and profile pic
+        ==========================================
+        -->
+        <div class="band-profile-modal hidden" id="bandProfileModal">
+            <div class="modal-content">
+                <button class="modal-close-btn" id="closeProfileModal" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+
+                <div class="modal-header">
+                    <div class="modal-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <h2 class="modal-title">Band Profile</h2>
+                    <p class="modal-subtitle">Customize how you appear in chat</p>
+                </div>
+
+                <form class="profile-form" id="bandProfileForm">
+                    <div class="profile-preview" id="profilePreview">
+                        <div class="preview-avatar" id="previewAvatar">?</div>
+                        <span class="preview-name" id="previewName">Band Name</span>
+                        <span class="preview-badge" id="previewBadge">BAND</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profileTitle">Badge Title</label>
+                        <input
+                            type="text"
+                            id="profileTitle"
+                            class="auth-input"
+                            placeholder="e.g. BAND, ARTIST, DJ, LOCAL"
+                            maxlength="12"
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profileColor">Badge Color</label>
+                        <div class="color-picker-row">
+                            <input type="color" id="profileColor" value="#FFD700">
+                            <span class="color-value" id="colorValue">#FFD700</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Profile Picture</label>
+                        <div class="pfp-upload-row">
+                            <input type="file" id="pfpInput" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-secondary" id="pfpUploadBtn">Upload Image</button>
+                            <span class="pfp-status" id="pfpStatus">No image</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <span>Save Profile</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!--
+        ==========================================
         CHAT CONTAINER
         Main chat interface styled like car dashboard
         ==========================================

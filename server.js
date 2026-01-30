@@ -350,7 +350,10 @@ app.post('/api/band/login', async (req, res) => {
             band: {
                 bandId: band.bandId,
                 username: band.username,
-                status: band.status
+                status: band.status,
+                color: band.color || '#FFD700',
+                title: band.title || 'BAND',
+                profilePic: band.profilePic || null
             }
         });
 
@@ -367,9 +370,47 @@ app.get('/api/band/verify', authenticateBand, (req, res) => {
         band: {
             bandId: req.band.bandId,
             username: req.band.username,
-            status: req.band.status
+            status: req.band.status,
+            color: req.band.color || '#FFD700',
+            title: req.band.title || 'BAND',
+            profilePic: req.band.profilePic || null
         }
     });
+});
+
+// API: Update band profile
+app.post('/api/band/profile', authenticateBand, (req, res) => {
+    try {
+        const { title, color, profilePic } = req.body;
+        const db = readBandsDB();
+        const band = db.bands[req.band.bandId];
+
+        if (!band) {
+            return res.status(404).json({ error: 'Band not found' });
+        }
+
+        // Update profile fields
+        if (title) band.title = title.slice(0, 12); // Max 12 chars
+        if (color) band.color = color;
+        if (profilePic) band.profilePic = profilePic;
+
+        writeBandsDB(db);
+
+        res.json({
+            success: true,
+            band: {
+                bandId: band.bandId,
+                username: band.username,
+                status: band.status,
+                color: band.color,
+                title: band.title,
+                profilePic: band.profilePic
+            }
+        });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
 });
 
 // API: Approve band (via email link)

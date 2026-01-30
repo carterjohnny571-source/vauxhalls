@@ -830,6 +830,149 @@ Early 2000s Facebook/Web 2.0 style
     border-color: #d9534f;
 }
 
+.band-btn-row {
+    display: flex;
+    gap: 5px;
+}
+
+.band-profile-btn {
+    padding: 5px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-gray-text);
+    cursor: pointer;
+}
+
+.band-profile-btn:hover {
+    background: var(--color-gray-light);
+    color: #FFD700;
+    border-color: #FFD700;
+}
+
+.band-profile-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Band Profile Modal */
+.band-profile-modal {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 15px;
+}
+
+.band-profile-modal.hidden {
+    display: none;
+}
+
+.band-profile-modal .modal-content {
+    max-width: 350px;
+    width: 100%;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-form label {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--color-gray-text);
+    margin-bottom: 3px;
+    display: block;
+}
+
+.profile-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+.preview-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+}
+
+.preview-name {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.preview-badge {
+    padding: 2px 6px;
+    font-size: 8px;
+    font-weight: bold;
+    color: #1a1a2e;
+    border-radius: 2px;
+}
+
+.color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker-row input[type="color"] {
+    width: 50px;
+    height: 30px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.color-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-gray-text);
+}
+
+.pfp-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pfp-status {
+    font-size: 10px;
+    color: var(--color-gray-text);
+}
+
+.btn-secondary {
+    padding: 6px 12px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    font-family: var(--font-main);
+    font-size: 10px;
+    cursor: pointer;
+    color: var(--color-gray-text);
+}
+
+.btn-secondary:hover {
+    background: var(--color-gray-light);
+}
+
 /* Disabled Message Input (for announcements when not logged in) */
 .message-input.disabled {
     background: #f5f5f5;
