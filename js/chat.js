@@ -1629,15 +1629,15 @@ Features: Multiple channels, presence detection, visitor tracking
             const validation = validateUsername(storedUsername);
             if (validation.valid) {
                 setUsername(validation.username);
-                hideUsernameModal();
-                if (firebaseOk) {
-                    loadMessages();
-                }
-            } else {
-                showUsernameModal();
             }
-        } else {
-            showUsernameModal();
+        }
+
+        // Always hide modal on load - only show when trying to send a message
+        hideUsernameModal();
+
+        // Load messages regardless of username
+        if (firebaseOk) {
+            loadMessages();
         }
 
         // Initialize event listeners
