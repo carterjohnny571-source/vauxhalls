@@ -7,6 +7,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Resend } = require('resend');
+const admin = require('firebase-admin');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,9 +15,32 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'users.json');
-const BANDS_FILE = path.join(__dirname, 'bands.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_this';
 const SALT_ROUNDS = 10;
+
+// Initialize Firebase Admin SDK
+let firebaseDB = null;
+try {
+    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+        : null;
+
+    if (serviceAccount) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: 'https://vauxhalls-default-rtdb.firebaseio.com'
+        });
+    } else {
+        // Fallback: use database URL only (requires open rules)
+        admin.initializeApp({
+            databaseURL: 'https://vauxhalls-default-rtdb.firebaseio.com'
+        });
+    }
+    firebaseDB = admin.database();
+    console.log('Firebase Admin SDK initialized');
+} catch (error) {
+    console.error('Firebase Admin initialization error:', error.message);
+}
 
 // Initialize database file if it doesn't exist
 if (!fs.existsSync(DB_FILE)) {
@@ -33,19 +57,63 @@ function writeDB(data) {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// Initialize bands database
-if (!fs.existsSync(BANDS_FILE)) {
-    fs.writeFileSync(BANDS_FILE, JSON.stringify({ bands: {}, approvalTokens: {} }, null, 2));
+// Firebase bands functions
+async function getBand(bandId) {
+    if (!firebaseDB) return null;
+    const snapshot = await firebaseDB.ref(`bands/${bandId}`).once('value');
+    return snapshot.val();
 }
 
-// Read bands database
-function readBandsDB() {
-    return JSON.parse(fs.readFileSync(BANDS_FILE, 'utf8'));
+async function getBandByUsername(username) {
+    if (!firebaseDB) return null;
+    const snapshot = await firebaseDB.ref('bands').orderByChild('usernameLower').equalTo(username.toLowerCase()).once('value');
+    const bands = snapshot.val();
+    if (bands) {
+        const bandId = Object.keys(bands)[0];
+        return { ...bands[bandId], bandId };
+    }
+    return null;
 }
 
-// Write bands database
-function writeBandsDB(data) {
-    fs.writeFileSync(BANDS_FILE, JSON.stringify(data, null, 2));
+async function getBandByEmail(email) {
+    if (!firebaseDB) return null;
+    const snapshot = await firebaseDB.ref('bands').orderByChild('email').equalTo(email.toLowerCase()).once('value');
+    const bands = snapshot.val();
+    if (bands) {
+        const bandId = Object.keys(bands)[0];
+        return { ...bands[bandId], bandId };
+    }
+    return null;
+}
+
+async function saveBand(bandId, bandData) {
+    if (!firebaseDB) return false;
+    await firebaseDB.ref(`bands/${bandId}`).set(bandData);
+    return true;
+}
+
+async function updateBand(bandId, updates) {
+    if (!firebaseDB) return false;
+    await firebaseDB.ref(`bands/${bandId}`).update(updates);
+    return true;
+}
+
+async function getApprovalToken(token) {
+    if (!firebaseDB) return null;
+    const snapshot = await firebaseDB.ref(`approvalTokens/${token}`).once('value');
+    return snapshot.val();
+}
+
+async function saveApprovalToken(token, bandId) {
+    if (!firebaseDB) return false;
+    await firebaseDB.ref(`approvalTokens/${token}`).set(bandId);
+    return true;
+}
+
+async function deleteApprovalToken(token) {
+    if (!firebaseDB) return false;
+    await firebaseDB.ref(`approvalTokens/${token}`).remove();
+    return true;
 }
 
 // Resend email configuration
@@ -107,7 +175,7 @@ async function sendApprovalEmail(band) {
 }
 
 // JWT authentication middleware
-function authenticateBand(req, res, next) {
+async function authenticateBand(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'No token provided' });
@@ -116,14 +184,13 @@ function authenticateBand(req, res, next) {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const db = readBandsDB();
-        const band = db.bands[decoded.bandId];
+        const band = await getBand(decoded.bandId);
 
         if (!band) {
             return res.status(401).json({ error: 'Band not found' });
         }
 
-        req.band = band;
+        req.band = { ...band, bandId: decoded.bandId };
         next();
     } catch (error) {
         return res.status(401).json({ error: 'Invalid token' });
@@ -237,21 +304,16 @@ app.post('/api/band/register', async (req, res) => {
 
         const cleanUsername = username.trim();
         const cleanEmail = email.trim().toLowerCase();
-        const db = readBandsDB();
 
         // Check if username is taken (case insensitive)
-        const usernameTaken = Object.values(db.bands).some(
-            b => b.username.toLowerCase() === cleanUsername.toLowerCase()
-        );
-        if (usernameTaken) {
+        const existingUsername = await getBandByUsername(cleanUsername);
+        if (existingUsername) {
             return res.status(400).json({ error: 'Band name already registered' });
         }
 
         // Check if email is taken
-        const emailTaken = Object.values(db.bands).some(
-            b => b.email.toLowerCase() === cleanEmail
-        );
-        if (emailTaken) {
+        const existingEmail = await getBandByEmail(cleanEmail);
+        if (existingEmail) {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
@@ -270,6 +332,7 @@ app.post('/api/band/register', async (req, res) => {
         const band = {
             bandId,
             username: cleanUsername,
+            usernameLower: cleanUsername.toLowerCase(),
             email: cleanEmail,
             passwordHash,
             createdAt: new Date().toISOString(),
@@ -281,10 +344,9 @@ app.post('/api/band/register', async (req, res) => {
             isAdmin: isAdminEmail
         };
 
-        // Save to database
-        db.bands[bandId] = band;
-        db.approvalTokens[approvalToken] = bandId;
-        writeBandsDB(db);
+        // Save to Firebase
+        await saveBand(bandId, band);
+        await saveApprovalToken(approvalToken, bandId);
 
         // Send approval email
         try {
@@ -292,7 +354,6 @@ app.post('/api/band/register', async (req, res) => {
             console.log(`Approval email sent for band: ${cleanUsername}`);
         } catch (emailError) {
             console.error('Failed to send approval email:', emailError.message);
-            // Still return success - band is registered, admin can approve manually via bands.json
         }
 
         res.json({
@@ -315,12 +376,8 @@ app.post('/api/band/login', async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
-        const db = readBandsDB();
-
         // Find band by username (case insensitive)
-        const band = Object.values(db.bands).find(
-            b => b.username.toLowerCase() === username.trim().toLowerCase()
-        );
+        const band = await getBandByUsername(username.trim());
 
         if (!band) {
             return res.status(401).json({ error: 'Invalid username or password' });
@@ -340,8 +397,7 @@ app.post('/api/band/login', async (req, res) => {
         }
 
         // Update last login
-        band.lastLogin = new Date().toISOString();
-        writeBandsDB(db);
+        await updateBand(band.bandId, { lastLogin: new Date().toISOString() });
 
         // Generate JWT token (expires in 7 days)
         const token = jwt.sign(
@@ -386,32 +442,27 @@ app.get('/api/band/verify', authenticateBand, (req, res) => {
 });
 
 // API: Update band profile
-app.post('/api/band/profile', authenticateBand, (req, res) => {
+app.post('/api/band/profile', authenticateBand, async (req, res) => {
     try {
         const { title, color, profilePic } = req.body;
-        const db = readBandsDB();
-        const band = db.bands[req.band.bandId];
-
-        if (!band) {
-            return res.status(404).json({ error: 'Band not found' });
-        }
+        const updates = {};
 
         // Update profile fields
-        if (title) band.title = title.slice(0, 12); // Max 12 chars
-        if (color) band.color = color;
-        if (profilePic) band.profilePic = profilePic;
+        if (title) updates.title = title.slice(0, 12); // Max 12 chars
+        if (color) updates.color = color;
+        if (profilePic) updates.profilePic = profilePic;
 
-        writeBandsDB(db);
+        await updateBand(req.band.bandId, updates);
 
         res.json({
             success: true,
             band: {
-                bandId: band.bandId,
-                username: band.username,
-                status: band.status,
-                color: band.color,
-                title: band.title,
-                profilePic: band.profilePic
+                bandId: req.band.bandId,
+                username: req.band.username,
+                status: req.band.status,
+                color: updates.color || req.band.color,
+                title: updates.title || req.band.title,
+                profilePic: updates.profilePic || req.band.profilePic
             }
         });
     } catch (error) {
@@ -421,12 +472,11 @@ app.post('/api/band/profile', authenticateBand, (req, res) => {
 });
 
 // API: Approve band (via email link)
-app.get('/api/band/approve/:token', (req, res) => {
+app.get('/api/band/approve/:token', async (req, res) => {
     const { token } = req.params;
-    const db = readBandsDB();
 
-    const bandId = db.approvalTokens[token];
-    if (!bandId || !db.bands[bandId]) {
+    const bandId = await getApprovalToken(token);
+    if (!bandId) {
         return res.send(`
             <!DOCTYPE html>
             <html>
@@ -447,7 +497,27 @@ app.get('/api/band/approve/:token', (req, res) => {
         `);
     }
 
-    const band = db.bands[bandId];
+    const band = await getBand(bandId);
+    if (!band) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Invalid Link</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: #fff; }
+                    h1 { color: #d9534f; }
+                    p { color: #ccc; }
+                </style>
+            </head>
+            <body>
+                <h1>Invalid or Expired Link</h1>
+                <p>This approval link is no longer valid.</p>
+            </body>
+            </html>
+        `);
+    }
 
     if (band.status === 'approved') {
         return res.send(`
@@ -476,14 +546,16 @@ app.get('/api/band/approve/:token', (req, res) => {
     const isAdminEmail = ADMIN_EMAILS.includes(band.email?.toLowerCase());
 
     // Approve the band
-    band.status = 'approved';
-    band.approvedAt = new Date().toISOString();
-    band.approvedBy = 'email-link';
+    const updates = {
+        status: 'approved',
+        approvedAt: new Date().toISOString(),
+        approvedBy: 'email-link'
+    };
     if (isAdminEmail) {
-        band.isAdmin = true;
+        updates.isAdmin = true;
     }
-    delete db.approvalTokens[token];
-    writeBandsDB(db);
+    await updateBand(bandId, updates);
+    await deleteApprovalToken(token);
 
     console.log(`Band approved: ${band.username}`);
 
@@ -507,15 +579,6 @@ app.get('/api/band/approve/:token', (req, res) => {
         </body>
         </html>
     `);
-});
-
-// Admin endpoint to reset bands database (use once then remove)
-app.get('/api/admin/reset-bands/:secret', (req, res) => {
-    if (req.params.secret !== 'vauxhalls2026reset') {
-        return res.status(403).json({ error: 'Invalid secret' });
-    }
-    writeBandsDB({ bands: {}, approvalTokens: {} });
-    res.json({ success: true, message: 'Bands database reset' });
 });
 
 // Socket.io for real-time features

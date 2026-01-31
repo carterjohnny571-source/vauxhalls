@@ -14,7 +14,14 @@ JWT_SECRET=vauxhalls_secret_jwt_key_2026_secure_random_string_here
 RESEND_API_KEY=<your_resend_api_key>
 ADMIN_EMAIL=thevauxhallsmusic@gmail.com
 SERVER_URL=https://vauxhalls-info.onrender.com
+FIREBASE_SERVICE_ACCOUNT=<your_firebase_service_account_json>
 ```
+
+### Getting FIREBASE_SERVICE_ACCOUNT:
+1. Go to Firebase Console → Project Settings → Service Accounts
+2. Click "Generate new private key"
+3. Copy the entire JSON content
+4. In Render, paste it as the value for FIREBASE_SERVICE_ACCOUNT (as one line, no line breaks)
 
 ---
 
