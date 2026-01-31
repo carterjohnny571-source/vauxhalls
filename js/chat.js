@@ -601,6 +601,29 @@ Features: Multiple channels, presence detection, visitor tracking
             return;
         }
 
+        // Bristol Club is view-restricted to logged-in bands only
+        if (state.currentChannel === 'bristol') {
+            const canView = state.bandAuth.isLoggedIn &&
+                           state.bandAuth.band?.status === 'approved';
+            if (!canView) {
+                if (elements.messagesList) {
+                    elements.messagesList.innerHTML = `
+                        <div class="welcome-message">
+                            <div class="welcome-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </div>
+                            <h4>The Bristol Club... Invite Only</h4>
+                            <p>Log in as a verified member to view and participate in this channel.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+        }
+
         const messagesRef = database.ref(`messages/${state.currentChannel}`);
 
         // First, load existing messages
