@@ -262,6 +262,10 @@ app.post('/api/band/register', async (req, res) => {
         const bandId = 'band_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         const approvalToken = 'approve_' + Date.now() + '_' + Math.random().toString(36).substr(2, 16);
 
+        // Admin emails that get automatic admin privileges
+        const ADMIN_EMAILS = ['thevauxhallsmusic@gmail.com'];
+        const isAdminEmail = ADMIN_EMAILS.includes(cleanEmail);
+
         // Create band record
         const band = {
             bandId,
@@ -273,7 +277,8 @@ app.post('/api/band/register', async (req, res) => {
             approvedAt: null,
             approvedBy: null,
             approvalToken,
-            lastLogin: null
+            lastLogin: null,
+            isAdmin: isAdminEmail
         };
 
         // Save to database
@@ -353,7 +358,8 @@ app.post('/api/band/login', async (req, res) => {
                 status: band.status,
                 color: band.color || '#FFD700',
                 title: band.title || 'BAND',
-                profilePic: band.profilePic || null
+                profilePic: band.profilePic || null,
+                isAdmin: band.isAdmin || false
             }
         });
 
@@ -373,7 +379,8 @@ app.get('/api/band/verify', authenticateBand, (req, res) => {
             status: req.band.status,
             color: req.band.color || '#FFD700',
             title: req.band.title || 'BAND',
-            profilePic: req.band.profilePic || null
+            profilePic: req.band.profilePic || null,
+            isAdmin: req.band.isAdmin || false
         }
     });
 });
@@ -464,10 +471,17 @@ app.get('/api/band/approve/:token', (req, res) => {
         `);
     }
 
+    // Admin emails that get automatic admin privileges
+    const ADMIN_EMAILS = ['thevauxhallsmusic@gmail.com'];
+    const isAdminEmail = ADMIN_EMAILS.includes(band.email?.toLowerCase());
+
     // Approve the band
     band.status = 'approved';
     band.approvedAt = new Date().toISOString();
     band.approvedBy = 'email-link';
+    if (isAdminEmail) {
+        band.isAdmin = true;
+    }
     delete db.approvalTokens[token];
     writeBandsDB(db);
 
@@ -493,6 +507,15 @@ app.get('/api/band/approve/:token', (req, res) => {
         </body>
         </html>
     `);
+});
+
+// Admin endpoint to reset bands database (use once then remove)
+app.get('/api/admin/reset-bands/:secret', (req, res) => {
+    if (req.params.secret !== 'vauxhalls2026reset') {
+        return res.status(403).json({ error: 'Invalid secret' });
+    }
+    writeBandsDB({ bands: {}, approvalTokens: {} });
+    res.json({ success: true, message: 'Bands database reset' });
 });
 
 // Socket.io for real-time features

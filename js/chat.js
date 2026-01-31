@@ -461,9 +461,12 @@ Features: Multiple channels, presence detection, visitor tracking
     // MESSAGE HANDLING
     // ==========================================
 
-    function createMessageElement(message, isOwnMessage = false) {
+    function createMessageElement(message, isOwnMessage = false, messageKey = null) {
         const div = document.createElement('div');
         div.className = `message${isOwnMessage ? ' own-message' : ''}`;
+        if (messageKey) {
+            div.dataset.messageKey = messageKey;
+        }
 
         if (message.type === 'system') {
             div.classList.add('system-message');
@@ -515,23 +518,43 @@ Features: Multiple channels, presence detection, visitor tracking
         // Non-verified users get quotation marks around their name
         const displayName = isBand ? escapeHtml(message.username) : `"${escapeHtml(message.username)}"`;
 
+        // Add delete button for admin users
+        const isAdmin = state.bandAuth.isLoggedIn && state.bandAuth.band?.isAdmin === true;
+        const deleteBtn = isAdmin && messageKey ? `
+            <button class="message-delete-btn" data-key="${messageKey}" title="Delete message">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </button>
+        ` : '';
+
         div.innerHTML = `
             ${avatarHtml}
             <div class="message-content">
                 <div class="message-header">
                     <span class="message-username${isBand ? ' band-username' : ''}" style="color: ${userColor}">${displayName}${isBand ? ` <span class="band-badge" ${badgeStyle}>${escapeHtml(bandTitle)}</span>` : ''}</span>
                     <span class="message-time">${time}</span>
+                    ${deleteBtn}
                 </div>
                 ${messageContent}
             </div>
         `;
 
+        // Bind delete button event
+        if (isAdmin && messageKey) {
+            const btn = div.querySelector('.message-delete-btn');
+            if (btn) {
+                btn.addEventListener('click', () => deleteMessage(messageKey));
+            }
+        }
+
         return div;
     }
 
-    function addMessageToDisplay(message) {
+    function addMessageToDisplay(message, messageKey = null) {
         const isOwnMessage = message.username === state.username;
-        const messageElement = createMessageElement(message, isOwnMessage);
+        const messageElement = createMessageElement(message, isOwnMessage, messageKey);
 
         // Remove welcome message if present
         const welcomeMessage = elements.messagesList.querySelector('.welcome-message');
@@ -580,19 +603,19 @@ Features: Multiple channels, presence detection, visitor tracking
         messagesRef.orderByChild('timestamp').limitToLast(CONFIG.MESSAGES_PER_LOAD).once('value', (snapshot) => {
             const messages = [];
             snapshot.forEach((child) => {
-                messages.push(child.val());
+                messages.push({ key: child.key, ...child.val() });
             });
 
             // Sort by timestamp and display
             messages.sort((a, b) => a.timestamp - b.timestamp);
             messages.forEach(message => {
-                addMessageToDisplay(message);
+                addMessageToDisplay(message, message.key);
             });
 
             // Then listen for new messages
             const listener = messagesRef.orderByChild('timestamp').startAt(Date.now()).on('child_added', (snapshot) => {
                 const message = snapshot.val();
-                addMessageToDisplay(message);
+                addMessageToDisplay(message, snapshot.key);
             });
 
             state.messageListeners[state.currentChannel] = listener;
@@ -688,6 +711,33 @@ Features: Multiple channels, presence detection, visitor tracking
             updateMessageCharCount();
             updateSendButton();
         }
+    }
+
+    // Delete message (admin only)
+    function deleteMessage(messageKey) {
+        if (!state.bandAuth.isLoggedIn || !state.bandAuth.band?.isAdmin) {
+            showToast('Admin privileges required', 'error');
+            return;
+        }
+
+        if (!confirm('Delete this message?')) {
+            return;
+        }
+
+        const messageRef = database.ref(`messages/${state.currentChannel}/${messageKey}`);
+        messageRef.remove()
+            .then(() => {
+                // Remove from DOM
+                const msgElement = document.querySelector(`[data-message-key="${messageKey}"]`);
+                if (msgElement) {
+                    msgElement.remove();
+                }
+                showToast('Message deleted', 'success');
+            })
+            .catch((error) => {
+                console.error('Error deleting message:', error);
+                showToast('Failed to delete message', 'error');
+            });
     }
 
     // ==========================================
