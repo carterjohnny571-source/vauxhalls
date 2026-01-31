@@ -50,6 +50,10 @@ Features: Multiple channels, presence detection, visitor tracking
             recommendations: {
                 name: '# Recommendations',
                 description: 'Share and discover new music and shows'
+            },
+            bristol: {
+                name: '# The Bristol Club',
+                description: 'Invite Only - Verified members only'
             }
         }
     };
@@ -637,10 +641,10 @@ Features: Multiple channels, presence detection, visitor tracking
             return false;
         }
 
-        // Check announcements channel access
-        if (state.currentChannel === 'announcements') {
+        // Check restricted channel access (announcements and bristol)
+        if (state.currentChannel === 'announcements' || state.currentChannel === 'bristol') {
             if (!state.bandAuth.isLoggedIn) {
-                showToast('Please log in as a band to post announcements', 'error');
+                showToast('Please log in as a band to post here', 'error');
                 showBandLoginModal();
                 return false;
             }
@@ -1039,19 +1043,25 @@ Features: Multiple channels, presence detection, visitor tracking
 
         if (!messageInput || !sendBtn) return;
 
-        if (state.currentChannel === 'announcements') {
+        const isRestrictedChannel = state.currentChannel === 'announcements' || state.currentChannel === 'bristol';
+
+        if (isRestrictedChannel) {
             const canPost = state.bandAuth.isLoggedIn &&
                           state.bandAuth.band &&
                           state.bandAuth.band.status === 'approved';
 
             if (!canPost) {
                 messageInput.disabled = true;
-                messageInput.placeholder = 'Log in as a band to post announcements';
+                messageInput.placeholder = state.currentChannel === 'bristol'
+                    ? 'Log in as a verified member to chat here'
+                    : 'Log in as a band to post announcements';
                 sendBtn.disabled = true;
                 messageInput.classList.add('disabled');
             } else {
                 messageInput.disabled = false;
-                messageInput.placeholder = 'Type a show announcement...';
+                messageInput.placeholder = state.currentChannel === 'bristol'
+                    ? 'Type a message...'
+                    : 'Type a show announcement...';
                 messageInput.classList.remove('disabled');
                 updateSendButton();
             }
